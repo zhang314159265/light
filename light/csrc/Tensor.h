@@ -5,6 +5,8 @@
 #include <memory>
 #include <numeric>
 #include <functional>
+#include <iostream>
+#include <sstream>
 
 enum ScalarType {
   Float = 0,
@@ -105,27 +107,41 @@ class Tensor {
     return ((Tensor*) this)->locate(indices);
   }
 
+  /*
+   * visitor return false to early terminate
+   */
   template <typename T>
   void visit(T visitor) const {
     auto indices = start_indices();
     do {
-      visitor(indices);
+      if (!visitor(indices)) {
+        break;
+      }
     } while (next_indices(indices));
   }
 
   template <typename T>
-  void init(T val) {
+  void initWithScalar(T val) {
+    // std::cout << "initWithScalar type " << typeid(val).name() << std::endl;
     visit([&val, this](const std::vector<int>& indices) {
       *(T *) locate(indices) = val;
+      return true;
     });
   }
 
-  template <typename T>
-  void print() {
-    std::cout << "Print tensor" << std::endl;
-    visit([this](const std::vector<int>& indices) {
-      std::cout << *(T *) locate(indices) << std::endl;
+  std::string to_string() const {
+    std::stringstream ss;
+    ss << "Print tensor" << std::endl;
+    visit([this, &ss](const std::vector<int>& indices) {
+      using T = float; // TODO
+      ss << *(T *) locate(indices) << std::endl;
+      return true;
     });
+    return ss.str();
+  }
+
+  void print() const {
+    std::cout << to_string();
   }
 
   static Tensor add(const Tensor& lhs, const Tensor& rhs) {
@@ -136,20 +152,25 @@ class Tensor {
       auto rhs_ptr = (scalar_t*) rhs.locate(indices);
       auto out_ptr = (scalar_t*) out.locate(indices);
       *out_ptr = *lhs_ptr + *rhs_ptr;
+      return true;
     });
     return out;
   }
 
   bool equal(const Tensor& other) const {
-    visit([this, &other](const std::vector<int>& indices) {
+    bool ans = true;
+    visit([this, &other, &ans](const std::vector<int>& indices) {
       using scalar_t = float; // TODO 
       auto me_ptr = (scalar_t*) locate(indices);
-      auto other_ptr = (scalar_t*) locate(indices);
+      auto other_ptr = (scalar_t*) other.locate(indices);
       if (*me_ptr != *other_ptr) {
+        ans = false;
         return false;
+      } else {
+        return true;
       }
     });
-    return true;
+    return ans;
   }
 
   std::vector<int> start_indices() const {
