@@ -1,7 +1,8 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
 #include <memory>
-#include "Tensor.h"
+#include "light/csrc/Tensor.h"
+#include "light/csrc/rand.h"
 
 namespace py = pybind11;
 
@@ -21,7 +22,19 @@ PYBIND11_MODULE(_C, m) {
     .def("__repr__", &Tensor::to_string)
     .def("__add__", &Tensor::add)
     .def("equal", &Tensor::equal)
-    // in pytorch __eq__ returns a tensor with elementwise result
-    // .def("__eq__", &Tensor::equal)
+    .def("tolist", [](Tensor self) {
+      std::vector<int> indices;
+      return self.tolist(indices);
+    })
     ;
+
+  m.def("manual_seed", [](int seed) {
+    set_seed(seed);
+  });
+  m.def("rand", [](int size0) {
+    return createRandTensor({size0}, ScalarType::Float);
+  });
+  m.def("rand", [](int size0, int size1) {
+    return createRandTensor({size0, size1}, ScalarType::Float);
+  });
 }

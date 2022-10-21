@@ -7,6 +7,9 @@
 #include <functional>
 #include <iostream>
 #include <sstream>
+#include "light/csrc/rand.h"
+
+namespace py = pybind11;
 
 enum ScalarType {
   Float = 0,
@@ -189,6 +192,42 @@ class Tensor {
     return false;
   }
 
+  py::list tolist(std::vector<int>& indices) const {
+    assert(dim() >= 1);
+    assert(indices.size() < dim());
+
+    py::list out;
+    indices.push_back(-1);
+    if (indices.size() < dim()) {
+      for (int i = 0; i < sizes()[indices.size() - 1]; ++i) {
+        indices.back() = i;
+        out.append(tolist(indices));
+      }
+    } else {
+      assert(indices.size() == dim());
+      for (int i = 0; i < sizes()[indices.size() - 1]; ++i) {
+        indices.back() = i;
+        using scalar_t = float; // TODO
+        scalar_t val = *(scalar_t*) locate(indices);
+        out.append(val);
+      }
+    }
+    indices.pop_back();
+    return out;
+  }
+
  private:
   std::shared_ptr<TensorImpl> impl_;
 };
+
+static inline Tensor createRandTensor(const std::vector<int>& sizes, ScalarType dtype) {
+  Tensor out(sizes, dtype);
+  Generator gen;
+  out.visit([&gen, &out](const std::vector<int>& indices) {
+    using scalar_t = float; // TODO
+    auto itemptr = (scalar_t*) out.locate(indices);
+    *itemptr = gen.uniform(0.0f, 1.0f);
+    return true;
+  });
+  return out;
+}
