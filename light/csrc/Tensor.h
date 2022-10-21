@@ -38,7 +38,7 @@ int compute_numel(const std::vector<int>& sizes) {
 
 class TensorImpl {
  public:
-  explicit TensorImpl(const std::vector<int>& sizes, ScalarType dtype)
+  explicit TensorImpl(const std::vector<int>& sizes, ScalarType dtype=Float)
       : sizes_(sizes), dtype_(dtype) {
     strides_ = contiguous_strides(sizes);
     numel_ = compute_numel(sizes);
