@@ -7,6 +7,9 @@ pymodule:
 	cp -r light build/install
 	g++ light/csrc/pymodule.cpp -shared -fPIC -I$(PYTHON_INC) -I. $(CFLAGS) -o build/install/light/_C.so
 
-all:
+test:
+	PYTHONPATH=build/install pytest -vs tests/test.py
+
+cpptest:
 	g++ light/csrc/tests/TensorTest.cpp -Ilight/csrc -o /tmp/a.out -lgtest -lgtest_main $(CFLAGS)
 	/tmp/a.out

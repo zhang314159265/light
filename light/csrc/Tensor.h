@@ -98,6 +98,10 @@ class Tensor {
     return impl_->data_;
   }
 
+  void *locate(int i, int j) const {
+    return locate(std::vector<int>{i, j});
+  }
+
   void *locate(const std::vector<int>& indices) {
     int idx = 0;
     for (int i = 0; i < dim(); ++i) {

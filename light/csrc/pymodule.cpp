@@ -3,6 +3,7 @@
 #include <memory>
 #include "light/csrc/Tensor.h"
 #include "light/csrc/rand.h"
+#include "light/csrc/ops.h"
 
 namespace py = pybind11;
 
@@ -17,6 +18,9 @@ PYBIND11_MODULE(_C, m) {
     }))
     .def("size", &Tensor::sizes)
     .def("stride", &Tensor::strides)
+    .def("dtype", [](Tensor self) {
+      return (int) self.dtype();
+    })
     .def("fill_", &Tensor::initWithScalar<float>)
     .def("__str__", &Tensor::to_string)
     .def("__repr__", &Tensor::to_string)
@@ -37,4 +41,6 @@ PYBIND11_MODULE(_C, m) {
   m.def("rand", [](int size0, int size1) {
     return createRandTensor({size0, size1}, ScalarType::Float);
   });
+
+  m.def("matmul", &ops::matmul);
 }
