@@ -7,6 +7,7 @@
 #include <functional>
 #include <iostream>
 #include <sstream>
+#include <pybind11/pybind11.h>
 #include "light/csrc/rand.h"
 
 namespace py = pybind11;
@@ -16,7 +17,7 @@ enum ScalarType {
   Double = 1,
 };
 
-int scalar_type_nbytes(ScalarType dtype) {
+static inline int scalar_type_nbytes(ScalarType dtype) {
   switch (dtype) {
   case ScalarType::Float:
     return 4;
@@ -27,7 +28,7 @@ int scalar_type_nbytes(ScalarType dtype) {
   }
 }
 
-std::vector<int> contiguous_strides(const std::vector<int> sizes) {
+static inline std::vector<int> contiguous_strides(const std::vector<int> sizes) {
   std::vector<int> strides(sizes.size(), 1);
   for (int i = sizes.size() - 2; i >= 0; --i) {
     strides[i] = strides[i + 1] * sizes[i + 1];
@@ -35,7 +36,7 @@ std::vector<int> contiguous_strides(const std::vector<int> sizes) {
   return strides;
 }
 
-int compute_numel(const std::vector<int>& sizes) {
+static inline int compute_numel(const std::vector<int>& sizes) {
   return std::accumulate(sizes.begin(), sizes.end(), 1, std::multiplies<int>());
 }
 
@@ -103,9 +104,12 @@ class Tensor {
   }
 
   void *locate(const std::vector<int>& indices) {
+    // indices.size() > dim() for broadcasting
+    assert(indices.size() >= dim());
+    int off = indices.size() - dim();
     int idx = 0;
     for (int i = 0; i < dim(); ++i) {
-      idx += indices[i] * strides()[i];
+      idx += indices[i + off] * strides()[i];
     }
     return data() + idx * element_size();
   }
@@ -151,18 +155,7 @@ class Tensor {
     std::cout << to_string();
   }
 
-  static Tensor add(const Tensor& lhs, const Tensor& rhs) {
-    Tensor out(lhs.sizes(), lhs.dtype());
-    lhs.visit([&lhs, &rhs, &out](const std::vector<int>& indices) {
-      using scalar_t = float; // TODO 
-      auto lhs_ptr = (scalar_t*) lhs.locate(indices);
-      auto rhs_ptr = (scalar_t*) rhs.locate(indices);
-      auto out_ptr = (scalar_t*) out.locate(indices);
-      *out_ptr = *lhs_ptr + *rhs_ptr;
-      return true;
-    });
-    return out;
-  }
+  static Tensor add(const Tensor& lhs, const Tensor& rhs);
 
   bool equal(const Tensor& other) const {
     bool ans = true;
@@ -235,3 +228,6 @@ static inline Tensor createRandTensor(const std::vector<int>& sizes, ScalarType 
   });
   return out;
 }
+
+std::vector<int> get_broadcast_shape(const std::vector<int>& lhs_shape, const std::vector<int>& rhs_shape);
+std::vector<int> get_broadcast_shape(std::vector<Tensor> tensors);

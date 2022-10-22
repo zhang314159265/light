@@ -5,10 +5,10 @@ pymodule:
 	rm -rf build/install
 	mkdir -p build/install
 	cp -r light build/install
-	g++ light/csrc/pymodule.cpp -shared -fPIC -I$(PYTHON_INC) -I. $(CFLAGS) -o build/install/light/_C.so
+	g++ light/csrc/*.cpp -shared -fPIC -I$(PYTHON_INC) -I. $(CFLAGS) -o build/install/light/_C.so
 
 test:
-	PYTHONPATH=build/install pytest -vs tests/test.py
+	PYTHONPATH=build/install pytest -vs tests/test.py -k test_broadcast
 
 cpptest:
 	g++ light/csrc/tests/TensorTest.cpp -Ilight/csrc -o /tmp/a.out -lgtest -lgtest_main $(CFLAGS)

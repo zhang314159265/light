@@ -32,7 +32,7 @@ def parity_test(testCase, worker):
 
     import torch as real_torch
     torch_tensor_from_light = to_torch_tensor(light_tensor)
-    testCase.assertTrue(real_torch.allclose(torch_tensor, torch_tensor_from_light))
+    testCase.assertTrue(real_torch.allclose(torch_tensor, torch_tensor_from_light), f"Torch tensor:\n{torch_tensor}\nlight tensor:\n{light_tensor}")
 
     import_torch_light(use_pytorch())
 
@@ -69,6 +69,21 @@ class TestLight(unittest.TestCase):
             print(out)
             return out
         parity_test(self, f)
+
+    def test_broadcast(self):
+        def f():
+            torch.manual_seed(23)
+            x = torch.rand(2, 3)
+            y = torch.rand(3)
+            return x + y
+        parity_test(self, f)
+
+        def f2():
+            torch.manual_seed(23)
+            x = torch.rand(2, 3)
+            y = torch.rand(3)
+            return y + x
+        parity_test(self, f2)
 
     def test_nn_forward(self):
         def f():

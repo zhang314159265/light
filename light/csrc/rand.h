@@ -25,6 +25,6 @@ class Generator {
  private:
 };
 
-void set_seed(int seed) {
+static inline void set_seed(int seed) {
     Generator::set_seed(seed); 
 }
