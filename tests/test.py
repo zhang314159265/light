@@ -71,6 +71,7 @@ class TestLight(unittest.TestCase):
         parity_test(self, f)
 
     def test_broadcast(self):
+        # TODO merge f and f2 by returning a tuple of tensors
         def f():
             torch.manual_seed(23)
             x = torch.rand(2, 3)

@@ -71,12 +71,30 @@ class Tensor {
     : impl_(new TensorImpl(sizes, dtype)) {
   }
 
+  // TODO support type other than float
+  static Tensor create_scalar_tensor(float val) {
+    Tensor out({}, ScalarType::Float);
+    out.set_item(val);
+    return out;
+  }
+
+  // TODO support type other than float
+  void set_item(float val) {
+    assert(dtype() == ScalarType::Float);
+    assert(dim() == 0);
+    *((float *) data()) = val;
+  }
+
   const std::vector<int>& sizes() const {
     return impl_->sizes_;
   }
 
   const std::vector<int>& strides() const {
     return impl_->strides_;
+  }
+
+  int numel() const {
+    return impl_->numel_;
   }
 
   ScalarType dtype() const {
@@ -156,6 +174,7 @@ class Tensor {
   }
 
   static Tensor add(const Tensor& lhs, const Tensor& rhs);
+  Tensor mean() const;
 
   bool equal(const Tensor& other) const {
     bool ans = true;

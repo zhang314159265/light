@@ -25,6 +25,7 @@ PYBIND11_MODULE(_C, m) {
     .def("__str__", &Tensor::to_string)
     .def("__repr__", &Tensor::to_string)
     .def("__add__", &Tensor::add)
+    .def("mean", &Tensor::mean)
     .def("equal", &Tensor::equal)
     .def("tolist", [](Tensor self) {
       std::vector<int> indices;
@@ -43,4 +44,6 @@ PYBIND11_MODULE(_C, m) {
   });
 
   m.def("matmul", &ops::matmul);
+  m.def("relu", &ops::relu);
+  m.def("sigmoid", &ops::sigmoid);
 }
