@@ -40,6 +40,9 @@ static inline int compute_numel(const std::vector<int>& sizes) {
   return std::accumulate(sizes.begin(), sizes.end(), 1, std::multiplies<int>());
 }
 
+class BackwardNode;
+class Tensor;
+
 class TensorImpl {
  public:
   explicit TensorImpl(const std::vector<int>& sizes, ScalarType dtype=Float)
@@ -50,9 +53,7 @@ class TensorImpl {
     data_ = malloc(capacity_);
   }
 
-  ~TensorImpl() {
-    free(data_);
-  }
+  ~TensorImpl();
 
  private:
   std::vector<int> sizes_;
@@ -61,6 +62,15 @@ class TensorImpl {
   void *data_;
   int capacity_;
   ScalarType dtype_;
+  bool requires_grad_ = false;
+
+  // Can not define backward_node_ as unique_ptr since in that case
+  // 1. TensorImpl will require complete definition of BackwardNode
+  // 2. BackwardNode requires complete definition of Tensor
+  // The depecencies will be hard to manage
+  // std::unique_ptr<BackwardNode> backward_node_;
+  BackwardNode* backward_node_ = nullptr;
+  Tensor* grad_ = nullptr;
 
   friend class Tensor;
 };
@@ -83,6 +93,42 @@ class Tensor {
     assert(dtype() == ScalarType::Float);
     assert(dim() == 0);
     *((float *) data()) = val;
+  }
+
+  template <typename T>
+  T item() const {
+    assert(dim() == 0);
+    assert(dtype() == ScalarType::Float);
+    using scalar_t = float; // TODO
+    return *((scalar_t *) data());
+  }
+
+  bool requires_grad() const {
+    return impl_->requires_grad_;
+  }
+
+  void set_requires_grad(bool requires_grad) {
+    impl_->requires_grad_ = requires_grad;
+  }
+
+  BackwardNode* backward_node() {
+    return impl_->backward_node_;
+  }
+
+  void set_backward_node(BackwardNode* node) {
+    impl_->backward_node_ = node;
+  }
+
+  Tensor grad() {
+    assert(impl_->grad_);
+    return *(impl_->grad_);
+  }
+
+  void set_grad(Tensor grad) {
+    // only set gradient for leaf node
+    assert(!backward_node());
+    assert(!impl_->grad_); // grad is not set yet
+    impl_->grad_ = new Tensor(grad);
   }
 
   const std::vector<int>& sizes() const {
@@ -232,6 +278,7 @@ class Tensor {
     return out;
   }
 
+  void backward();
  private:
   std::shared_ptr<TensorImpl> impl_;
 };

@@ -31,6 +31,13 @@ PYBIND11_MODULE(_C, m) {
       std::vector<int> indices;
       return self.tolist(indices);
     })
+    .def("item", [](Tensor self) {
+      assert(self.dtype() == ScalarType::Float); // TODO
+      return self.item<float>();
+    })
+    .def_property("requires_grad", &Tensor::requires_grad, &Tensor::set_requires_grad)
+    .def_property("grad", &Tensor::grad, nullptr)
+    .def("backward", &Tensor::backward)
     ;
 
   m.def("manual_seed", [](int seed) {
@@ -39,9 +46,13 @@ PYBIND11_MODULE(_C, m) {
   m.def("rand", [](int size0) {
     return createRandTensor({size0}, ScalarType::Float);
   });
-  m.def("rand", [](int size0, int size1) {
-    return createRandTensor({size0, size1}, ScalarType::Float);
-  });
+  m.def("rand", [](int size0, int size1, bool requires_grad) {
+    auto out = createRandTensor({size0, size1}, ScalarType::Float);
+    if (requires_grad) {
+      out.set_requires_grad(true);
+    }
+    return out;
+  }, py::arg("size0"), py::arg("size1"), py::arg("requires_grad") = false);
 
   m.def("matmul", &ops::matmul);
   m.def("relu", &ops::relu);

@@ -1,6 +1,8 @@
 #pragma once
 
 #include <cassert>
+#include "light/csrc/backward.h"
+#include "light/csrc/backward_ops.h"
 
 namespace ops {
 
@@ -69,7 +71,9 @@ static Tensor mean(const Tensor& inp) {
   });
   int numel = inp.numel();
   assert(numel > 0);
-  return Tensor::create_scalar_tensor((float) (accum / numel));
+  auto out = Tensor::create_scalar_tensor((float) (accum / numel));
+  create_backward_node<MeanBackward>(out, {inp});
+  return out;
 }
 
 }

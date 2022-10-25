@@ -108,5 +108,45 @@ class TestLight(unittest.TestCase):
             out = torch.sigmoid(out)
             out = out.mean()
             print(out)
+            return out
+
+        parity_test(self, f)
+
+    def test_mean_backward(self):
+        def f():
+            torch.manual_seed(23)
+            inp = torch.rand(2, 2, requires_grad=True)
+            out = inp.mean()
+            assert out.requires_grad
+            out.backward()
+            print(f"inp.grad {inp.grad}")
+            return inp.grad
+        parity_test(self, f)
+
+    def test_nn_backward(self):
+        def f():
+            torch.manual_seed(23)
+            B = 2
+            M = 4
+            N = 2
+    
+            inp = torch.rand(B, M)
+            weight0 = torch.rand(M, N, requires_grad=True)
+            bias0 = torch.rand(N, requires_grad=True)
+            weight1 = torch.rand(N, 1, requires_grad=True)
+            bias1 = torch.rand(1, requires_grad=True)
+    
+            out = torch.matmul(inp, weight0)
+            out = out + bias0
+            out = torch.relu(out)
+    
+            out = torch.matmul(out, weight1)
+            out = out + bias1
+            out = torch.sigmoid(out)
+            out = out.mean()
+
+            out.backward()
+            print(weight0.grad)
+            return weight0.grad
 
         parity_test(self, f)

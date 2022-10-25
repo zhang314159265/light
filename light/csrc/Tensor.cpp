@@ -1,4 +1,5 @@
 #include "light/csrc/Tensor.h"
+#include "light/csrc/backward_node.h"
 #include "light/csrc/ops.h"
 
 std::vector<int> get_broadcast_shape(const std::vector<int>& lhs_shape, const std::vector<int>& rhs_shape) {
@@ -50,4 +51,21 @@ Tensor Tensor::add(const Tensor& lhs, const Tensor& rhs) {
 
 Tensor Tensor::mean() const {
   return ops::mean(*this);
+}
+
+void Tensor::backward() {
+  assert(requires_grad());
+  assert(dim() == 0); // scalar tensor
+  assert(impl_->backward_node_);
+  impl_->backward_node_->run(*this, create_scalar_tensor(1.0f));
+}
+
+TensorImpl::~TensorImpl() {
+  free(data_);
+  if (backward_node_) {
+    delete backward_node_;
+  }
+  if (grad_) {
+    delete grad_;
+  }
 }
