@@ -29,6 +29,7 @@ static Tensor matmul(const Tensor& lhs, const Tensor& rhs) {
     }
   }
 
+  create_backward_node<MatmulBackward>(out, {lhs, rhs});
   return out;
 }
 
@@ -41,6 +42,7 @@ static Tensor relu(const Tensor& inp) {
     *out_ptr = std::max(*inp_ptr, 0.0f);
     return true;
   });
+  create_backward_node<ReluBackward>(out, {inp});
   return out;
 }
 
@@ -57,6 +59,7 @@ static Tensor sigmoid(const Tensor& inp) {
     *out_ptr = (scalar_t) out;
     return true;
   });
+  create_backward_node<SigmoidBackward>(out, {inp});
   return out;
 }
 
@@ -73,6 +76,51 @@ static Tensor mean(const Tensor& inp) {
   assert(numel > 0);
   auto out = Tensor::create_scalar_tensor((float) (accum / numel));
   create_backward_node<MeanBackward>(out, {inp});
+  return out;
+}
+
+static Tensor add(const Tensor& lhs, const Tensor& rhs) {
+  std::vector<int> shape = get_broadcast_shape({lhs, rhs});
+  Tensor out(shape, lhs.dtype());
+  out.visit([&lhs, &rhs, &out](const std::vector<int>& indices) {
+    using scalar_t = float; // TODO 
+    auto lhs_ptr = (scalar_t*) lhs.locate(indices);
+    auto rhs_ptr = (scalar_t*) rhs.locate(indices);
+    auto out_ptr = (scalar_t*) out.locate(indices);
+    *out_ptr = *lhs_ptr + *rhs_ptr;
+    return true;
+  });
+  create_backward_node<AddBackward>(out, {lhs, rhs});
+  return out;
+}
+
+static Tensor sub(const Tensor& lhs, const Tensor& rhs) {
+  std::vector<int> shape = get_broadcast_shape({lhs, rhs});
+  Tensor out(shape, lhs.dtype());
+  out.visit([&lhs, &rhs, &out](const std::vector<int>& indices) {
+    using scalar_t = float; // TODO 
+    auto lhs_ptr = (scalar_t*) lhs.locate(indices);
+    auto rhs_ptr = (scalar_t*) rhs.locate(indices);
+    auto out_ptr = (scalar_t*) out.locate(indices);
+    *out_ptr = *lhs_ptr - *rhs_ptr;
+    return true;
+  });
+  create_backward_node<SubBackward>(out, {lhs, rhs});
+  return out;
+}
+
+static Tensor mul(const Tensor& lhs, const Tensor& rhs) {
+  std::vector<int> shape = get_broadcast_shape({lhs, rhs});
+  Tensor out(shape, lhs.dtype());
+  out.visit([&lhs, &rhs, &out](const std::vector<int>& indices) {
+    using scalar_t = float; // TODO 
+    auto lhs_ptr = (scalar_t*) lhs.locate(indices);
+    auto rhs_ptr = (scalar_t*) rhs.locate(indices);
+    auto out_ptr = (scalar_t*) out.locate(indices);
+    *out_ptr = *lhs_ptr * *rhs_ptr;
+    return true;
+  });
+  create_backward_node<MulBackward>(out, {lhs, rhs});
   return out;
 }
 

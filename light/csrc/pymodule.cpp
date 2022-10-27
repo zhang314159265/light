@@ -43,9 +43,13 @@ PYBIND11_MODULE(_C, m) {
   m.def("manual_seed", [](int seed) {
     set_seed(seed);
   });
-  m.def("rand", [](int size0) {
-    return createRandTensor({size0}, ScalarType::Float);
-  });
+  m.def("rand", [](int size0, bool requires_grad) {
+    auto out = createRandTensor({size0}, ScalarType::Float);
+    if (requires_grad) {
+      out.set_requires_grad(true);
+    }
+    return out;
+  }, py::arg("size0"), py::arg("requires_grad") = false);
   m.def("rand", [](int size0, int size1, bool requires_grad) {
     auto out = createRandTensor({size0, size1}, ScalarType::Float);
     if (requires_grad) {

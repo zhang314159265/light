@@ -112,14 +112,16 @@ class TestLight(unittest.TestCase):
 
         parity_test(self, f)
 
-    def test_mean_backward(self):
+    def test_simple_backward(self):
         def f():
             torch.manual_seed(23)
             inp = torch.rand(2, 2, requires_grad=True)
-            out = inp.mean()
+            x = torch.sigmoid(inp)
+            out = x.mean()
             assert out.requires_grad
             out.backward()
             print(f"inp.grad {inp.grad}")
+            assert not inp.grad.requires_grad
             return inp.grad
         parity_test(self, f)
 

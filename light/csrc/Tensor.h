@@ -220,6 +220,8 @@ class Tensor {
   }
 
   static Tensor add(const Tensor& lhs, const Tensor& rhs);
+  friend Tensor operator-(const Tensor& lhs, const Tensor& rhs);
+  friend Tensor operator*(const Tensor& lhs, const Tensor& rhs);
   Tensor mean() const;
 
   bool equal(const Tensor& other) const {

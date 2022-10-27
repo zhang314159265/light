@@ -34,19 +34,16 @@ std::vector<int> get_broadcast_shape(std::vector<Tensor> tensors) {
   return shape;
 }
 
-
 Tensor Tensor::add(const Tensor& lhs, const Tensor& rhs) {
-  std::vector<int> shape = get_broadcast_shape({lhs, rhs});
-  Tensor out(shape, lhs.dtype());
-  out.visit([&lhs, &rhs, &out](const std::vector<int>& indices) {
-    using scalar_t = float; // TODO 
-    auto lhs_ptr = (scalar_t*) lhs.locate(indices);
-    auto rhs_ptr = (scalar_t*) rhs.locate(indices);
-    auto out_ptr = (scalar_t*) out.locate(indices);
-    *out_ptr = *lhs_ptr + *rhs_ptr;
-    return true;
-  });
-  return out;
+  return ops::add(lhs, rhs);
+}
+
+Tensor operator-(const Tensor& lhs, const Tensor& rhs) {
+  return ops::sub(lhs, rhs);
+}
+
+Tensor operator*(const Tensor& lhs, const Tensor& rhs) {
+  return ops::mul(lhs, rhs);
 }
 
 Tensor Tensor::mean() const {
@@ -54,6 +51,7 @@ Tensor Tensor::mean() const {
 }
 
 void Tensor::backward() {
+  DisableGradGuard g;
   assert(requires_grad());
   assert(dim() == 0); // scalar tensor
   assert(impl_->backward_node_);
