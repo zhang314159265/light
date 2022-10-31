@@ -88,6 +88,15 @@ class Tensor {
     return out;
   }
 
+  Tensor clone() const {
+    Tensor out = Tensor(sizes(), dtype());
+    assert(out.impl_->capacity_ == impl_->capacity_);
+    memcpy(out.impl_->data_, impl_->data_, impl_->capacity_);
+    return out;
+  }
+
+  static Tensor dummy; // a dummy tensor. The value does not matter
+
   // TODO support type other than float
   void set_item(float val) {
     assert(dtype() == ScalarType::Float);

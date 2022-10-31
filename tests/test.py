@@ -116,7 +116,10 @@ class TestLight(unittest.TestCase):
         def f():
             torch.manual_seed(23)
             inp = torch.rand(2, 2, requires_grad=True)
+            y = torch.rand(2, 2)
             x = torch.sigmoid(inp)
+            x = x + y
+            x = torch.relu(x)
             out = x.mean()
             assert out.requires_grad
             out.backward()

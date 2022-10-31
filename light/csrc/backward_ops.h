@@ -26,9 +26,7 @@ class MatmulBackward : public BackwardNode {
  public:
   using BackwardNode::BackwardNode;
 
-  void run(Tensor out, Tensor out_grad) {
-    assert(false && "MatmulBackward::run ni"); // TODO
-  }
+  void run(Tensor out, Tensor out_grad);
 };
 
 class AddBackward : public BackwardNode {
@@ -36,7 +34,19 @@ class AddBackward : public BackwardNode {
   using BackwardNode::BackwardNode;
 
   void run(Tensor out, Tensor out_grad) {
-    assert(false && "AddBackward::run ni"); // TODO 
+    Tensor lhs = inputs_[0];
+    Tensor rhs = inputs_[1];
+    // TODO: instead of clone out_grad, we should do accumulation
+    // to handle the case that lhs and rhs are the same tensor.
+    Tensor lhs_grad = Tensor::dummy;
+    Tensor rhs_grad = Tensor::dummy;
+    if (lhs.requires_grad()) {
+      lhs_grad = out_grad.clone();
+    }
+    if (rhs.requires_grad()) {
+      rhs_grad = out_grad.clone();
+    }
+    propagate({lhs_grad, rhs_grad});
   }
 };
 
@@ -58,12 +68,34 @@ class MulBackward : public BackwardNode {
   }
 };
 
+class TransposeBackward : public BackwardNode {
+ public:
+  using BackwardNode::BackwardNode;
+
+  void run(Tensor out, Tensor out_grad) {
+    assert(false && "TransposeBackward::run ni"); // TODO
+  }
+};
+
 class ReluBackward : public BackwardNode {
  public:
   using BackwardNode::BackwardNode;
 
   void run(Tensor out, Tensor out_grad) {
-    assert(false && "ReluBackward::run ni"); // TODO 
+    // TODO: does it matter if we assign 0 or 1 as gradient when input is 0
+    // TODO: it will be more general to implement as: inp_grad = (inp > 0) * out_grad
+    Tensor inp = inputs_[0];
+    Tensor inp_grad = out_grad.clone();
+    inp_grad.visit([&inp, &inp_grad](const std::vector<int>& indices) {
+      using scalar_t = float; // TODO
+      auto inp_ptr = (scalar_t*) inp.locate(indices);
+      auto inp_grad_ptr = (scalar_t*) inp_grad.locate(indices);
+      if (*inp_ptr <= 0.0f) {
+        *inp_grad_ptr = 0.0f;
+      }
+      return true;
+    });
+    propagate({inp_grad});
   }
 };
 

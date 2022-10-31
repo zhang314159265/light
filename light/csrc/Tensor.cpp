@@ -2,6 +2,8 @@
 #include "light/csrc/backward_node.h"
 #include "light/csrc/ops.h"
 
+Tensor Tensor::dummy = Tensor::create_scalar_tensor(0.0f);
+
 std::vector<int> get_broadcast_shape(const std::vector<int>& lhs_shape, const std::vector<int>& rhs_shape) {
   int out_dim = std::max(lhs_shape.size(), rhs_shape.size());
   std::vector<int> out_shape(out_dim, 0);

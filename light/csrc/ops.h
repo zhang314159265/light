@@ -124,4 +124,23 @@ static Tensor mul(const Tensor& lhs, const Tensor& rhs) {
   return out;
 }
 
+static Tensor transpose(const Tensor& inp) {
+  // TODO: implement transpose as a view and only tune strides?
+  assert(inp.dim() == 2); // TODO only handle 2 dim so far
+  std::vector<int> outsizes = inp.sizes();
+  std::swap(outsizes[0], outsizes[1]);
+  Tensor out(outsizes, inp.dtype());
+  out.visit([&inp, &out](const std::vector<int>& out_indices) {
+    using scalar_t = float; // TODO 
+    std::vector<int> inp_indices = out_indices;
+    std::swap(inp_indices[0], inp_indices[1]);
+    auto inp_ptr = (scalar_t*) inp.locate(inp_indices);
+    auto out_ptr = (scalar_t*) out.locate(out_indices);
+    *out_ptr = *inp_ptr;
+    return true;
+  });
+  create_backward_node<TransposeBackward>(out, {inp});
+  return out;
+}
+
 }
