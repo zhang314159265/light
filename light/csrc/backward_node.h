@@ -1,6 +1,7 @@
 #pragma once
 
 #include "light/csrc/Tensor.h"
+#include "light/csrc/config.h"
 #include <iostream>
 
 class BackwardNode {
@@ -16,6 +17,9 @@ class BackwardNode {
 
       if (inp.requires_grad()) {
         if (inp.backward_node()) {
+          if (config_keep_grad_for_nonleaf()) {
+            inp.set_grad(inp_grad);
+          }
           // intermediate node
           inp.backward_node()->run(inp, inp_grad);
         } else {

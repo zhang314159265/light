@@ -36,7 +36,7 @@ std::vector<int> get_broadcast_shape(std::vector<Tensor> tensors) {
   return shape;
 }
 
-Tensor Tensor::add(const Tensor& lhs, const Tensor& rhs) {
+Tensor operator+(const Tensor& lhs, const Tensor& rhs) {
   return ops::add(lhs, rhs);
 }
 
@@ -48,8 +48,20 @@ Tensor operator*(const Tensor& lhs, const Tensor& rhs) {
   return ops::mul(lhs, rhs);
 }
 
+Tensor Tensor::exp() const {
+  return ops::exp(*this);
+}
+
 Tensor Tensor::mean() const {
   return ops::mean(*this);
+}
+
+Tensor Tensor::sum(int dim) const {
+  return ops::sum(*this, dim);
+}
+
+Tensor Tensor::unsqueeze(int dim) const {
+  return ops::unsqueeze(*this, dim);
 }
 
 void Tensor::backward() {

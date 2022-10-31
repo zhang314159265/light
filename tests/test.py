@@ -155,3 +155,19 @@ class TestLight(unittest.TestCase):
             return weight0.grad
 
         parity_test(self, f)
+
+    def test_classifier(self):
+        def f():
+            torch.manual_seed(23)
+            B = 2
+            NF = 10
+            NC = 3
+
+            inp = torch.rand(B, NF)
+            weight0 = torch.rand(NF, NC, requires_grad=True)
+            out = torch.matmul(inp, weight0)
+            out = torch.log_softmax(out, 1)
+            out.mean().backward()
+            return weight0.grad
+
+        parity_test(self, f)

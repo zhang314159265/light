@@ -77,6 +77,89 @@ class TransposeBackward : public BackwardNode {
   }
 };
 
+class ExpBackward : public BackwardNode {
+ public:
+  using BackwardNode::BackwardNode;
+
+  void run(Tensor out, Tensor out_grad) {
+    assert(false && "ExpBackward::run ni"); // TODO
+  }
+};
+
+class SumBackward : public BackwardNode {
+ public:
+  using BackwardNode::BackwardNode;
+
+  void run(Tensor out, Tensor out_grad) {
+    assert(false && "SumBackward::run ni"); // TODO
+  }
+};
+
+class UnsqueezeBackward : public BackwardNode {
+ public:
+  using BackwardNode::BackwardNode;
+
+  void run(Tensor out, Tensor out_grad) {
+    assert(false && "UnsqueezeBackward::run ni"); // TODO
+  }
+};
+
+class LogSoftmaxBackward : public BackwardNode {
+ public:
+  using BackwardNode::BackwardNode;
+
+  /*
+   * Consider calculating gradients for xi
+   *   sigma = exp(x1) + exp(x2) + ... + exp(xn)
+   * 
+   *   yi = log(exp(xi) / sigma)
+   *
+   *   grad_xi(yi) -- the graidnet regarding xi. i.e. dyi/dxi
+   *   = grad_xi(log(exp(xi) / sigma))
+   *   = sigma / exp(xi) * [ exp(xi) * sigma - exp(xi) * exp(xi) ] / sigma / sigma
+   *   = [sigma - exp(xi)] / sigma
+   *   = 1 - exp(xi) / sigma
+   *   = 1 - exp(yi)
+   *
+   *   grad_xi(yj) -- where j != i
+   *   = grad_xi( log(exp(xj) / sigma) )
+   *   = sigma / exp(xj) * exp(xj) * (-1) / sigma / sigma * exp(xi)
+   *   = (-1) / sigma * exp(xi)
+   *   = -exp(yi) -- it's interesting that this graident is the same for different value of j !
+   *
+   *   grad_xi(loss)
+   *   = sum(for j in 1..n: grad_yj(loss) * grad_xi(yj)) 
+   *   = grad_yi(loss) + sum(for j in 1..n: grad_yj(loss) * [-exp(yi)]
+   *   = grad_yi(loss) - exp(yi) * sum(for j in 1..n: grad_yj(loss)) -- the final formula!
+   */
+  void run(Tensor out, Tensor out_grad) {
+    assert(out.dim() == 2); // TODO: only support 2 dim for now
+    #if 1
+    // compose this op with existing ops
+    Tensor in_grad = out_grad - out.exp() * out_grad.sum(-1).unsqueeze(1);
+    #else
+    Tensor in_grad(out_grad.sizes(), out_grad.dtype());
+    int M = out_grad.sizes()[0];
+    int N = out_grad.sizes()[1];
+    using scalar_t = float; // TODO
+    std::vector<scalar_t> sumvec(M, 0.0f);
+
+    for (int i = 0; i < M; ++i) {
+      for (int j = 0; j < N; ++j) {
+        sumvec[i] += *(scalar_t*) out_grad.locate(i, j);
+      }
+      for (int j = 0; j < N; ++j) {
+        scalar_t newval;
+        newval = *(scalar_t*) out_grad.locate(i, j) - std::exp(*(scalar_t*) out.locate(i, j)) * sumvec[i];
+        *(scalar_t*) in_grad.locate(i, j) = newval;
+      }
+    }
+    #endif
+
+    propagate({in_grad});
+  }
+};
+
 class ReluBackward : public BackwardNode {
  public:
   using BackwardNode::BackwardNode;

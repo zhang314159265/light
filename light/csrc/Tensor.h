@@ -9,6 +9,7 @@
 #include <sstream>
 #include <pybind11/pybind11.h>
 #include "light/csrc/rand.h"
+#include "light/csrc/config.h"
 
 namespace py = pybind11;
 
@@ -120,6 +121,12 @@ class Tensor {
     impl_->requires_grad_ = requires_grad;
   }
 
+  void resize(const std::vector<int>& newsizes, const std::vector<int>& newstrides) {
+    assert(numel() == compute_numel(newsizes));
+    impl_->sizes_ = newsizes;
+    impl_->strides_ = newstrides;
+  }
+
   BackwardNode* backward_node() {
     return impl_->backward_node_;
   }
@@ -134,8 +141,10 @@ class Tensor {
   }
 
   void set_grad(Tensor grad) {
-    // only set gradient for leaf node
-    assert(!backward_node());
+    if (!config_keep_grad_for_nonleaf()) {
+      // only set gradient for leaf node
+      assert(!backward_node());
+    }
     assert(!impl_->grad_); // grad is not set yet
     impl_->grad_ = new Tensor(grad);
   }
@@ -228,10 +237,13 @@ class Tensor {
     std::cout << to_string();
   }
 
-  static Tensor add(const Tensor& lhs, const Tensor& rhs);
+  friend Tensor operator+(const Tensor& lhs, const Tensor& rhs);
   friend Tensor operator-(const Tensor& lhs, const Tensor& rhs);
   friend Tensor operator*(const Tensor& lhs, const Tensor& rhs);
   Tensor mean() const;
+  Tensor exp() const;
+  Tensor sum(int dim) const;
+  Tensor unsqueeze(int dim) const;
 
   bool equal(const Tensor& other) const {
     bool ans = true;
