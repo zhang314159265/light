@@ -58,8 +58,13 @@ PYBIND11_MODULE(_C, m) {
     return out;
   }, py::arg("size0"), py::arg("size1"), py::arg("requires_grad") = false);
 
+  m.def("randint", [](int low, int high, std::vector<int> sizes) {
+    return createRandIntTensor(low, high, sizes);
+  });
+
   m.def("matmul", &ops::matmul);
   m.def("relu", &ops::relu);
   m.def("sigmoid", &ops::sigmoid);
   m.def("log_softmax", &ops::log_softmax);
+  m.def("nll_loss", &ops::nll_loss);
 }

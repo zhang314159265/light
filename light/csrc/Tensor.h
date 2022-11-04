@@ -16,13 +16,36 @@ namespace py = pybind11;
 enum ScalarType {
   Float = 0,
   Double = 1,
+  Int64 = 2,
 };
+
+#define DISPATCH_DTYPE(dtype, worker) do { \
+  switch (dtype) {\
+  case ScalarType::Float: { \
+    using scalar_t = float; \
+    worker(); \
+    break; \
+  } \
+  case ScalarType::Double: { \
+    using scalar_t = double; \
+    worker(); \
+    break; \
+  } \
+  case ScalarType::Int64: { \
+    using scalar_t = int64_t; \
+    worker(); \
+    break; \
+  } \
+  } \
+} while(false)
 
 static inline int scalar_type_nbytes(ScalarType dtype) {
   switch (dtype) {
   case ScalarType::Float:
     return 4;
   case ScalarType::Double:
+    return 8;
+  case ScalarType::Int64:
     return 8;
   default:
     assert(false && "element_size unhandled branch");
@@ -225,10 +248,11 @@ class Tensor {
   std::string to_string() const {
     std::stringstream ss;
     ss << "Print tensor" << std::endl;
-    visit([this, &ss](const std::vector<int>& indices) {
-      using T = float; // TODO
-      ss << *(T *) locate(indices) << std::endl;
-      return true;
+    DISPATCH_DTYPE(dtype(), [&]() {
+      visit([this, &ss](const std::vector<int>& indices) {
+        ss << *(scalar_t *) locate(indices) << std::endl;
+        return true;
+      });
     });
     return ss.str();
   }
@@ -290,12 +314,13 @@ class Tensor {
       }
     } else {
       assert(indices.size() == dim());
-      for (int i = 0; i < sizes()[indices.size() - 1]; ++i) {
-        indices.back() = i;
-        using scalar_t = float; // TODO
-        scalar_t val = *(scalar_t*) locate(indices);
-        out.append(val);
-      }
+      DISPATCH_DTYPE(dtype(), [&]() {
+        for (int i = 0; i < sizes()[indices.size() - 1]; ++i) {
+          indices.back() = i;
+          auto val = *(scalar_t*) locate(indices);
+          out.append(val);
+        }
+      });
     }
     indices.pop_back();
     return out;
@@ -314,6 +339,19 @@ static inline Tensor createRandTensor(const std::vector<int>& sizes, ScalarType 
     auto itemptr = (scalar_t*) out.locate(indices);
     *itemptr = gen.uniform(0.0f, 1.0f);
     return true;
+  });
+  return out;
+}
+
+static inline Tensor createRandIntTensor(int low, int high, const std::vector<int>& sizes) {
+  Tensor out(sizes, ScalarType::Int64);
+  Generator gen;
+  DISPATCH_DTYPE(out.dtype(), [&]() {
+    out.visit([&gen, &out, &low, &high](const std::vector<int>& indices) {
+      auto itemptr = (scalar_t*) out.locate(indices);
+      *itemptr = gen.uniformInt(low, high);
+      return true;
+    });
   });
   return out;
 }

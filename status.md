@@ -4,5 +4,7 @@
 - automatically add the `create_backward_node` calls to ops
 
 # Scratch
+- TODO: torch.randint
+  - write a test in test/test.py for randint
+- TODO: implement nll loss <==
 - end2end train the digit recognizer and visualize the input and prediction
-

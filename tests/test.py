@@ -32,7 +32,11 @@ def parity_test(testCase, worker):
 
     import torch as real_torch
     torch_tensor_from_light = to_torch_tensor(light_tensor)
-    testCase.assertTrue(real_torch.allclose(torch_tensor, torch_tensor_from_light), f"Torch tensor:\n{torch_tensor}\nlight tensor:\n{light_tensor}")
+    # When torch_tensor is a long tensor, it can not be compared with
+    # torch_tensor_from_light with is a float tensor. Convert torch_tensor
+    # to float tensor to ease the comparison.
+    torch_tensor = torch_tensor.to(dtype=real_torch.float32) 
+    testCase.assertTrue(real_torch.allclose(torch_tensor, torch_tensor_from_light), f"Torch tensor:\n{torch_tensor}\nlight tensor:\n{torch_tensor_from_light}")
 
     import_torch_light(use_pytorch())
 
@@ -49,7 +53,7 @@ class TestLight(unittest.TestCase):
     
             res = a + b
             print(res)
-            self.assertEqual(list(a.size()), [2, 3])
+            self.assertEqual(list(a.size()), [2, 8])
             self.assertTrue(c.equal(res))
         parity_test(self, f)
 
@@ -57,6 +61,14 @@ class TestLight(unittest.TestCase):
         def f():
             torch.manual_seed(23)
             x = torch.rand(2, 3)
+            return x
+        parity_test(self, f)
+
+    def test_randint(self):
+        def f():
+            torch.manual_seed(23)
+            x = torch.randint(0, 10, (2, 3))
+            print(x)
             return x
         parity_test(self, f)
 
@@ -167,7 +179,13 @@ class TestLight(unittest.TestCase):
             weight0 = torch.rand(NF, NC, requires_grad=True)
             out = torch.matmul(inp, weight0)
             out = torch.log_softmax(out, 1)
-            out.mean().backward()
+
+            label = torch.randint(0, NC, (B,))
+            assert len(label) == B
+            # nll_loss already does reduction
+            loss = torch.nn.functional.nll_loss(out, label)
+            loss.backward()
+            print(weight0.grad)
             return weight0.grad
 
         parity_test(self, f)

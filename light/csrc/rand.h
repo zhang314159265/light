@@ -14,6 +14,11 @@ class Generator {
     return val01 * (end - start) + start;
   }
 
+  int32_t uniformInt(int low, int high) {
+    int range = high - low;
+    return get_engine()() % range + low;
+  }
+
   static void set_seed(int seed) {
     get_engine() = std::mt19937(seed);
   }

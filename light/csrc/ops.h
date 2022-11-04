@@ -233,4 +233,9 @@ static Tensor unsqueeze(const Tensor& in, int dim) {
   return out;
 }
 
+static Tensor nll_loss(const Tensor& pred, const Tensor& label) {
+  // pred is the result of log_softmax
+  assert(false && "nll_loss ni");
+}
+
 }

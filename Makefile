@@ -10,7 +10,8 @@ pymodule:
 test:
 	# PYTHONPATH=build/install pytest -vs tests/test.py -k test_simple_backward
 	# PYTHONPATH=build/install pytest -vs tests/test.py -k test_nn_backward
-	PYTHONPATH=build/install pytest -vs tests/test.py -k test_classifier
+	# PYTHONPATH=build/install pytest -vs tests/test.py -k test_classifier
+	PYTHONPATH=build/install pytest -vs tests/test.py -k test_randint
 
 cpptest:
 	g++ light/csrc/tests/TensorTest.cpp -Ilight/csrc -o /tmp/a.out -lgtest -lgtest_main $(CFLAGS)
