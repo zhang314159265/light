@@ -25,6 +25,10 @@ PYBIND11_MODULE(_C, m) {
     .def("__str__", &Tensor::to_string)
     .def("__repr__", &Tensor::to_string)
     .def("__add__", [](Tensor lhs, Tensor rhs) { return lhs + rhs; })
+    .def("__len__", [](Tensor self) {
+      assert(self.dim() > 0);
+      return self.sizes()[0];
+    })
     .def("mean", &Tensor::mean)
     .def("equal", &Tensor::equal)
     .def("tolist", [](Tensor self) {

@@ -184,6 +184,7 @@ class TestLight(unittest.TestCase):
             assert len(label) == B
             # nll_loss already does reduction
             loss = torch.nn.functional.nll_loss(out, label)
+            loss = loss.mean()
             loss.backward()
             print(weight0.grad)
             return weight0.grad

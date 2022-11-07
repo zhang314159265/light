@@ -233,9 +233,29 @@ static Tensor unsqueeze(const Tensor& in, int dim) {
   return out;
 }
 
+// pred is the result of log_softmax
 static Tensor nll_loss(const Tensor& pred, const Tensor& label) {
-  // pred is the result of log_softmax
-  assert(false && "nll_loss ni");
+  assert(pred.dim() == 2);
+  assert(label.dim() == 1);
+  int M = pred.sizes()[0];
+  int N = pred.sizes()[1];
+  assert(M == label.sizes()[0]);
+
+  Tensor out({M}, pred.dtype());
+
+  assert(label.dtype() == ScalarType::Int64);
+  DISPATCH_DTYPE(pred.dtype(), [&]() {
+    for (int i = 0; i < M; ++i) {
+      uint64_t idx = *(int64_t*) label.locate({i}); 
+      assert(idx < N);
+      scalar_t logprob = *(scalar_t*) pred.locate(i, idx);
+      *(scalar_t*) out.locate({i}) = -logprob;
+    }
+  });
+
+  create_backward_node<NLLLossBackward>(out, {pred, label});
+  // TODO: unlike pytorch, we don't do reduction here
+  return out;
 }
 
 }

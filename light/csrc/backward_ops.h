@@ -104,6 +104,37 @@ class UnsqueezeBackward : public BackwardNode {
   }
 };
 
+class NLLLossBackward : public BackwardNode {
+ public:
+  using BackwardNode::BackwardNode;
+
+  void run(Tensor out, Tensor out_grad) {
+    Tensor pred = inputs_[0]; 
+    assert(pred.requires_grad());
+    Tensor label = inputs_[1];
+
+    Tensor pred_grad(pred.sizes(), pred.dtype());
+    assert(pred.dim() == 2);
+    int M = pred.sizes()[0];
+    int N = pred.sizes()[1];
+    DISPATCH_DTYPE(pred.dtype(), [&]() {
+      for (int i = 0; i < M; ++i) {
+        int idx = *(int64_t*) label.locate({i});
+        scalar_t grad_val = *(scalar_t*) out_grad.locate({i});
+        for (int j = 0; j < N; ++j) {
+          scalar_t *grad_ptr = (scalar_t*) pred_grad.locate({i, j});    
+          if (j == idx) {
+            *grad_ptr = -grad_val;
+          } else {
+            *grad_ptr = 0;
+          }
+        }
+      }
+    });
+    propagate({pred_grad, Tensor::dummy});
+  }
+};
+
 class LogSoftmaxBackward : public BackwardNode {
  public:
   using BackwardNode::BackwardNode;
