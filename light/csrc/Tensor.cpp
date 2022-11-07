@@ -64,6 +64,14 @@ Tensor Tensor::unsqueeze(int dim) const {
   return ops::unsqueeze(*this, dim);
 }
 
+void Tensor::zero_() {
+  ops::zero_(*this);
+}
+
+void Tensor::add_(Tensor other, double alpha) {
+  ops::add_(*this, other, alpha);
+}
+
 void Tensor::backward() {
   DisableGradGuard g;
   assert(requires_grad());

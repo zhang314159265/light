@@ -14,6 +14,7 @@ def import_torch_light(use_pytorch = False):
     else:
         import light as torch
         from light import Tensor
+        import light.optim
 
 import_torch_light(use_pytorch=use_pytorch())
 
@@ -177,16 +178,21 @@ class TestLight(unittest.TestCase):
 
             inp = torch.rand(B, NF)
             weight0 = torch.rand(NF, NC, requires_grad=True)
+            sgd = torch.optim.SGD([weight0], lr=0.01)
             out = torch.matmul(inp, weight0)
             out = torch.log_softmax(out, 1)
 
             label = torch.randint(0, NC, (B,))
             assert len(label) == B
-            # nll_loss already does reduction
             loss = torch.nn.functional.nll_loss(out, label)
+            # pytorch nll_loss already does reduction, but light nll_loss does not.
+            # Thus add a mean here.
             loss = loss.mean()
+            sgd.zero_grad()
             loss.backward()
-            print(weight0.grad)
-            return weight0.grad
+            sgd.step()
+
+            print(weight0)
+            return weight0
 
         parity_test(self, f)

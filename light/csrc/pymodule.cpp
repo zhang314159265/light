@@ -40,8 +40,17 @@ PYBIND11_MODULE(_C, m) {
       return self.item<float>();
     })
     .def_property("requires_grad", &Tensor::requires_grad, &Tensor::set_requires_grad)
-    .def_property("grad", &Tensor::grad, nullptr)
+    .def_property("grad", [](Tensor self) -> py::object {
+      Tensor* grad_ptr = self.grad_ptr();
+      if (grad_ptr) {
+        return py::cast(*grad_ptr);
+      } else {
+        return py::none();
+      }
+    }, nullptr)
     .def("backward", &Tensor::backward)
+    .def("zero_", &Tensor::zero_)
+    .def("add_", &Tensor::add_)
     ;
 
   m.def("manual_seed", [](int seed) {
@@ -71,4 +80,6 @@ PYBIND11_MODULE(_C, m) {
   m.def("sigmoid", &ops::sigmoid);
   m.def("log_softmax", &ops::log_softmax);
   m.def("nll_loss", &ops::nll_loss);
+  m.def("disable_grad", &disable_grad);
+  m.def("enable_grad", &enable_grad);
 }

@@ -258,4 +258,28 @@ static Tensor nll_loss(const Tensor& pred, const Tensor& label) {
   return out;
 }
 
+static void zero_(Tensor inp) {
+  assert(!inp.requires_grad() && "Don't handle backward for inplace op yet");
+  DISPATCH_DTYPE(inp.dtype(), [&]() {
+    inp.visit([&inp](const std::vector<int>& indices) {
+      auto inp_ptr = (scalar_t*) inp.locate(indices);
+      *inp_ptr = 0;
+      return true;
+    });
+  });
+}
+
+static void add_(Tensor self, Tensor other, double alpha) {
+  // only used in optimizer step right now. So assume no_grad mode
+  assert(!is_grad_enabled());
+  DISPATCH_DTYPE(self.dtype(), [&]() {
+    self.visit([&self, &other, alpha](const std::vector<int>& indices) {
+      auto self_ptr = (scalar_t*) self.locate(indices);
+      auto other_ptr = (scalar_t*) other.locate(indices);
+      *self_ptr = *self_ptr + *other_ptr * alpha;
+      return true;
+    });
+  });
+}
+
 }

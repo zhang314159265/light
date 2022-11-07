@@ -163,6 +163,10 @@ class Tensor {
     return *(impl_->grad_);
   }
 
+  Tensor* grad_ptr() {
+    return impl_->grad_;
+  }
+
   void set_grad(Tensor grad) {
     if (!config_keep_grad_for_nonleaf()) {
       // only set gradient for leaf node
@@ -268,6 +272,9 @@ class Tensor {
   Tensor exp() const;
   Tensor sum(int dim) const;
   Tensor unsqueeze(int dim) const;
+
+  void zero_();
+  void add_(Tensor other, double alpha);
 
   bool equal(const Tensor& other) const {
     bool ans = true;
