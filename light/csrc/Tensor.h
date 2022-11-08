@@ -272,9 +272,11 @@ class Tensor {
   Tensor exp() const;
   Tensor sum(int dim) const;
   Tensor unsqueeze(int dim) const;
+  Tensor transpose(int dim1, int dim2) const;
 
   void zero_();
   void add_(Tensor other, double alpha);
+  void uniform_(double lb, double ub);
 
   bool equal(const Tensor& other) const {
     bool ans = true;

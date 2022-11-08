@@ -34,10 +34,12 @@ class DisableGradGuard {
   bool prev_val_;
 };
 
-// TODO this cause a lot of dupliate binary code. Each BackwardNode subclass
-// will have a copy of this function. Think about how to reduce
-template <typename T>
-static void create_backward_node(Tensor out, std::vector<Tensor> inputs) {
+template <typename F>
+static void create_backward_node(Tensor out, std::vector<Tensor> inputs, F f) {
+  /*
+   * f is a callable creating the backward node. Use this API if the backward node
+   * takes extra arguments besides inputs tensors.
+   */
   if (!is_grad_enabled()) {
     return;
   }
@@ -55,5 +57,14 @@ static void create_backward_node(Tensor out, std::vector<Tensor> inputs) {
   }
 
   out.set_requires_grad(true);
-  out.set_backward_node(new T(inputs));
+  out.set_backward_node(f());
+}
+
+// TODO this cause a lot of dupliate binary code. Each BackwardNode subclass
+// will have a copy of this function. Think about how to reduce
+template <typename T>
+static void create_backward_node(Tensor out, std::vector<Tensor> inputs) {
+  return create_backward_node(out, inputs, [&inputs]() {
+    return new T(inputs);
+  });
 }

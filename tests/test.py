@@ -54,7 +54,7 @@ class TestLight(unittest.TestCase):
     
             res = a + b
             print(res)
-            self.assertEqual(list(a.size()), [2, 8])
+            self.assertEqual(list(a.size()), [2, 3])
             self.assertTrue(c.equal(res))
         parity_test(self, f)
 
@@ -169,6 +169,15 @@ class TestLight(unittest.TestCase):
 
         parity_test(self, f)
 
+    def test_linear(self):
+        def f():
+            torch.manual_seed(23)
+            linear = torch.nn.Linear(2, 3)
+            inp = torch.rand(10, 2)
+            out = linear(inp)
+            return out
+        parity_test(self, f)
+
     def test_classifier(self):
         def f():
             torch.manual_seed(23)
@@ -177,9 +186,10 @@ class TestLight(unittest.TestCase):
             NC = 3
 
             inp = torch.rand(B, NF)
-            weight0 = torch.rand(NF, NC, requires_grad=True)
-            sgd = torch.optim.SGD([weight0], lr=0.01)
-            out = torch.matmul(inp, weight0)
+            lin = torch.nn.Linear(NF, NC)
+            # sgd = torch.optim.SGD([lin.weight, lin.bias], lr=0.01)
+            sgd = torch.optim.SGD([lin.weight], lr=0.01)
+            out = lin(inp)
             out = torch.log_softmax(out, 1)
 
             label = torch.randint(0, NC, (B,))
@@ -192,7 +202,7 @@ class TestLight(unittest.TestCase):
             loss.backward()
             sgd.step()
 
-            print(weight0)
-            return weight0
+            print(lin.weight)
+            return lin.weight
 
         parity_test(self, f)

@@ -3,6 +3,7 @@
 #include <cassert>
 #include "light/csrc/backward.h"
 #include "light/csrc/backward_ops.h"
+#include "light/csrc/rand.h"
 
 namespace ops {
 
@@ -137,25 +138,6 @@ static Tensor exp(const Tensor& in) {
   return out;
 }
 
-static Tensor transpose(const Tensor& inp) {
-  // TODO: implement transpose as a view and only tune strides?
-  assert(inp.dim() == 2); // TODO only handle 2 dim so far
-  std::vector<int> outsizes = inp.sizes();
-  std::swap(outsizes[0], outsizes[1]);
-  Tensor out(outsizes, inp.dtype());
-  out.visit([&inp, &out](const std::vector<int>& out_indices) {
-    using scalar_t = float; // TODO 
-    std::vector<int> inp_indices = out_indices;
-    std::swap(inp_indices[0], inp_indices[1]);
-    auto inp_ptr = (scalar_t*) inp.locate(inp_indices);
-    auto out_ptr = (scalar_t*) out.locate(out_indices);
-    *out_ptr = *inp_ptr;
-    return true;
-  });
-  create_backward_node<TransposeBackward>(out, {inp});
-  return out;
-}
-
 static Tensor log_softmax(const Tensor& inp, int dim) {
   assert(inp.dtype() == ScalarType::Float); // TODO
   using scalar_t = float;
@@ -233,6 +215,29 @@ static Tensor unsqueeze(const Tensor& in, int dim) {
   return out;
 }
 
+// TODO: implement transpose as a view and only tune strides?
+static Tensor transpose(Tensor in, int dim1, int dim2) {
+  assert(dim1 != dim2);
+  std::vector<int> out_size = in.sizes();
+  std::swap(out_size[dim1], out_size[dim2]);
+  Tensor out(out_size, in.dtype());
+
+  DISPATCH_DTYPE(in.dtype(), [&]() {
+    out.visit([&in, &out, dim1, dim2](const std::vector<int>& out_indices) {
+      std::vector<int> in_indices = out_indices;
+      std::swap(in_indices[dim1], in_indices[dim2]);
+      auto out_ptr = (scalar_t *) out.locate(out_indices);
+      auto in_ptr = (scalar_t *) in.locate(in_indices);
+      *out_ptr = *in_ptr;
+      return true;
+    });
+  });
+  create_backward_node(out, {in}, [&in, dim1, dim2]() {
+    return new TransposeBackward({in}, dim1, dim2);
+  });
+  return out;
+}
+
 // pred is the result of log_softmax
 static Tensor nll_loss(const Tensor& pred, const Tensor& label) {
   assert(pred.dim() == 2);
@@ -277,6 +282,18 @@ static void add_(Tensor self, Tensor other, double alpha) {
       auto self_ptr = (scalar_t*) self.locate(indices);
       auto other_ptr = (scalar_t*) other.locate(indices);
       *self_ptr = *self_ptr + *other_ptr * alpha;
+      return true;
+    });
+  });
+}
+
+static void uniform_(Tensor self, double lb, double ub) {
+  assert(!is_grad_enabled());
+  DISPATCH_DTYPE(self.dtype(), [&]() {
+    self.visit([&self, lb, ub](const std::vector<int>& indices) {
+      Generator gen;
+      auto itemptr = (scalar_t*) self.locate(indices);
+      *itemptr = gen.uniform(lb, ub);
       return true;
     });
   });

@@ -64,12 +64,20 @@ Tensor Tensor::unsqueeze(int dim) const {
   return ops::unsqueeze(*this, dim);
 }
 
+Tensor Tensor::transpose(int dim1, int dim2) const {
+  return ops::transpose(*this, dim1, dim2);
+}
+
 void Tensor::zero_() {
   ops::zero_(*this);
 }
 
 void Tensor::add_(Tensor other, double alpha) {
   ops::add_(*this, other, alpha);
+}
+
+void Tensor::uniform_(double lb, double ub) {
+  ops::uniform_(*this, lb, ub);
 }
 
 void Tensor::backward() {

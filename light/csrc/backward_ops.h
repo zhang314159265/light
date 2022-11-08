@@ -70,11 +70,19 @@ class MulBackward : public BackwardNode {
 
 class TransposeBackward : public BackwardNode {
  public:
-  using BackwardNode::BackwardNode;
+  explicit TransposeBackward(const std::vector<Tensor>& inputs, int dim1, int dim2)
+    : BackwardNode(inputs), dim1_(dim1), dim2_(dim2) { }
 
   void run(Tensor out, Tensor out_grad) {
-    assert(false && "TransposeBackward::run ni"); // TODO
+    Tensor in = inputs_[0];
+    assert(in.requires_grad());
+
+    Tensor in_grad = out_grad.transpose(dim1_, dim2_);
+    propagate({in_grad});
   }
+ private:
+  int dim1_;
+  int dim2_;
 };
 
 class ExpBackward : public BackwardNode {

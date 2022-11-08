@@ -4,4 +4,5 @@
 - automatically add the `create_backward_node` calls to ops
 
 # Scratch
+- check how nn.Linear initialize parameters
 - end2end train the digit recognizer and visualize the input and prediction <++ IMP

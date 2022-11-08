@@ -30,6 +30,7 @@ PYBIND11_MODULE(_C, m) {
       return self.sizes()[0];
     })
     .def("mean", &Tensor::mean)
+    .def("transpose", &Tensor::transpose)
     .def("equal", &Tensor::equal)
     .def("tolist", [](Tensor self) {
       std::vector<int> indices;
@@ -51,6 +52,7 @@ PYBIND11_MODULE(_C, m) {
     .def("backward", &Tensor::backward)
     .def("zero_", &Tensor::zero_)
     .def("add_", &Tensor::add_)
+    .def("uniform_", &Tensor::uniform_)
     ;
 
   m.def("manual_seed", [](int seed) {
