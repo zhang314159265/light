@@ -8,6 +8,7 @@
 #include <iostream>
 #include <sstream>
 #include <pybind11/pybind11.h>
+#include <pybind11/numpy.h>
 #include "light/csrc/rand.h"
 #include "light/csrc/config.h"
 
@@ -18,6 +19,15 @@ enum ScalarType {
   Double = 1,
   Int64 = 2,
 };
+
+template <typename T>
+static ScalarType scalarTypeFromCTypeToEnum() {
+  assert(false && "must specialize");
+}
+
+template <> ScalarType scalarTypeFromCTypeToEnum<float>() { return Float; }
+template <> ScalarType scalarTypeFromCTypeToEnum<double>() { return Double; }
+template <> ScalarType scalarTypeFromCTypeToEnum<int64_t>() { return Int64; }
 
 #define DISPATCH_DTYPE(dtype, worker) do { \
   switch (dtype) {\
@@ -364,6 +374,28 @@ static inline Tensor createRandIntTensor(int low, int high, const std::vector<in
       return true;
     });
   });
+  return out;
+}
+
+// TODO can we borrow the storage from the np array directly to avoid a copy
+template <typename scalar_t>
+static inline Tensor createFromNpArray(py::array_t<scalar_t> ar) {
+  py::buffer_info np_buf = ar.request();
+  int ndim = np_buf.ndim;
+  std::vector<int> shape(ndim);
+  int size = 1;
+  for (int i = 0; i < ndim; ++i) {
+    shape[i] = np_buf.shape[i];
+    size *= shape[i];
+  }
+  assert(size == np_buf.size);
+  Tensor out(shape, scalarTypeFromCTypeToEnum<scalar_t>());
+
+  scalar_t* np_ptr = (scalar_t*) np_buf.ptr;
+  scalar_t* data_ptr = (scalar_t*) out.data();
+  for (int i = 0; i < size; ++i) {
+    data_ptr[i] = np_ptr[i];
+  }
   return out;
 }
 

@@ -2,21 +2,10 @@ import os
 import unittest
 
 from light.bridge import to_torch_tensor
+from light.utils import import_torch_light
+import numpy as np
 
-def use_pytorch():
-    return os.environ.get("USE_PYTORCH", None) == "1"
-
-def import_torch_light(use_pytorch = False):
-    global torch, Tensor
-    if use_pytorch:
-        import torch
-        from torch import Tensor
-    else:
-        import light as torch
-        from light import Tensor
-        import light.optim
-
-import_torch_light(use_pytorch=use_pytorch())
+import_torch_light()
 
 def parity_test(testCase, worker):
     """
@@ -39,7 +28,7 @@ def parity_test(testCase, worker):
     torch_tensor = torch_tensor.to(dtype=real_torch.float32) 
     testCase.assertTrue(real_torch.allclose(torch_tensor, torch_tensor_from_light), f"Torch tensor:\n{torch_tensor}\nlight tensor:\n{torch_tensor_from_light}")
 
-    import_torch_light(use_pytorch())
+    import_torch_light()
 
 class TestLight(unittest.TestCase):
     def test_basic(self):
@@ -57,6 +46,21 @@ class TestLight(unittest.TestCase):
             self.assertEqual(list(a.size()), [2, 3])
             self.assertTrue(c.equal(res))
         parity_test(self, f)
+
+    def test_from_np(self):
+        def f():
+            ar = np.array([[2, 3], [4, 5]], dtype=np.float32)
+            t = torch.Tensor(ar)
+            print(t)
+            return t
+        parity_test(self, f)
+
+        def g():
+            ar = np.array([[2, 3], [4, 5]], dtype=np.int64)
+            t = torch.LongTensor(ar)
+            print(t)
+            return t
+        parity_test(self, g)
 
     def test_rand(self):
         def f():

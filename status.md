@@ -4,5 +4,5 @@
 - automatically add the `create_backward_node` calls to ops
 
 # Scratch
-- check how nn.Linear initialize parameters
+- load tensor from numpy array (float32/int64)
 - end2end train the digit recognizer and visualize the input and prediction <++ IMP

@@ -1,5 +1,6 @@
 #include <pybind11/pybind11.h>
 #include <pybind11/stl.h>
+#include <pybind11/numpy.h>
 #include <memory>
 #include "light/csrc/Tensor.h"
 #include "light/csrc/rand.h"
@@ -15,6 +16,9 @@ PYBIND11_MODULE(_C, m) {
     // TODO support dimensions other than 2
     .def(py::init([](int size0, int size1) {
       return std::make_unique<Tensor>(std::vector<int>({size0, size1}), ScalarType::Float);
+    }))
+    .def(py::init([](py::array_t<float> ar) {
+      return createFromNpArray(ar);
     }))
     .def("size", &Tensor::sizes)
     .def("stride", &Tensor::strides)
@@ -54,6 +58,12 @@ PYBIND11_MODULE(_C, m) {
     .def("add_", &Tensor::add_)
     .def("uniform_", &Tensor::uniform_)
     ;
+
+  // in pytorch LongTensor is implemented as a class, here we implement it as
+  // a method
+  m.def("LongTensor", [](py::array_t<int64_t> ar) {
+    return createFromNpArray(ar);
+  });
 
   m.def("manual_seed", [](int seed) {
     set_seed(seed);
