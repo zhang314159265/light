@@ -95,6 +95,31 @@ static Tensor add(const Tensor& lhs, const Tensor& rhs) {
   return out;
 }
 
+// used in backward. Correspond to broadcast in forward.
+static Tensor reduce(Tensor self, const std::vector<int>& reduced_size) {
+  assert(!is_grad_enabled());
+  assert(self.dim() >= reduced_size.size());
+  if (self.dim() == reduced_size.size()) {
+    return self;
+  }
+  int off = self.dim() - reduced_size.size();
+  for (int i = 0; i < reduced_size.size(); ++i) {
+    assert(self.sizes()[i + off] == reduced_size[i]);
+  }
+  Tensor out(reduced_size, self.dtype());
+  DISPATCH_DTYPE(self.dtype(), [&]() {
+    out.initWithScalar((scalar_t) 0);
+    self.visit([&self, &out, off](const std::vector<int>& self_indices) {
+      auto self_ptr = (scalar_t*) self.locate(self_indices);
+      std::vector<int> out_indices(self_indices.begin() + off, self_indices.end());
+      auto out_ptr = (scalar_t*) out.locate(out_indices);
+      *out_ptr += *self_ptr;
+      return true;
+    });
+  });
+  return out;
+}
+
 static Tensor sub(const Tensor& lhs, const Tensor& rhs) {
   std::vector<int> shape = get_broadcast_shape({lhs, rhs});
   Tensor out(shape, lhs.dtype());

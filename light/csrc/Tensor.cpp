@@ -68,6 +68,10 @@ Tensor Tensor::transpose(int dim1, int dim2) const {
   return ops::transpose(*this, dim1, dim2);
 }
 
+Tensor Tensor::reduce(const std::vector<int>& reduced_size) const {
+  return ops::reduce(*this, reduced_size);
+}
+
 void Tensor::zero_() {
   ops::zero_(*this);
 }

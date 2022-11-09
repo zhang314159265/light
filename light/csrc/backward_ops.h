@@ -41,10 +41,10 @@ class AddBackward : public BackwardNode {
     Tensor lhs_grad = Tensor::dummy;
     Tensor rhs_grad = Tensor::dummy;
     if (lhs.requires_grad()) {
-      lhs_grad = out_grad.clone();
+      lhs_grad = out_grad.clone().reduce(lhs.sizes());
     }
     if (rhs.requires_grad()) {
-      rhs_grad = out_grad.clone();
+      rhs_grad = out_grad.clone().reduce(rhs.sizes());
     }
     propagate({lhs_grad, rhs_grad});
   }

@@ -187,8 +187,7 @@ class TestLight(unittest.TestCase):
 
             inp = torch.rand(B, NF)
             lin = torch.nn.Linear(NF, NC)
-            # sgd = torch.optim.SGD([lin.weight, lin.bias], lr=0.01)
-            sgd = torch.optim.SGD([lin.weight], lr=0.01)
+            sgd = torch.optim.SGD([lin.weight, lin.bias], lr=0.01)
             out = lin(inp)
             out = torch.log_softmax(out, 1)
 
