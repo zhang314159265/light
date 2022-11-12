@@ -46,6 +46,7 @@ PYBIND11_MODULE(_C, m) {
       return self.item<float>();
     })
     .def_property("requires_grad", &Tensor::requires_grad, &Tensor::set_requires_grad)
+    .def_property("is_param", &Tensor::is_param, &Tensor::set_is_param)
     .def_property("grad", [](Tensor self) -> py::object {
       Tensor* grad_ptr = self.grad_ptr();
       if (grad_ptr) {

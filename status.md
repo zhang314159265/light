@@ -5,4 +5,8 @@
 
 # Scratch
 - end2end train the digit recognizer with light <++IMP
-  - support Tensor/int
+  - support Module.parameters()
+
+- improve the build system (do this after the digit recognizer works e2e)
+  - make changing python file super easy
+  - recompile a file only if the dependencies is updates

@@ -97,6 +97,7 @@ class TensorImpl {
   int capacity_;
   ScalarType dtype_;
   bool requires_grad_ = false;
+  bool is_param_ = false;
 
   // Can not define backward_node_ as unique_ptr since in that case
   // 1. TensorImpl will require complete definition of BackwardNode
@@ -152,6 +153,14 @@ class Tensor {
 
   void set_requires_grad(bool requires_grad) {
     impl_->requires_grad_ = requires_grad;
+  }
+
+  bool is_param() const {
+    return impl_->is_param_;
+  }
+
+  void set_is_param(bool is_param) {
+    impl_->is_param_ = is_param;
   }
 
   void resize(const std::vector<int>& newsizes, const std::vector<int>& newstrides) {

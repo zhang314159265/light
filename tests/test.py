@@ -191,6 +191,15 @@ class TestLight(unittest.TestCase):
             return out
         parity_test(self, f)
 
+    def test_parameters(self):
+        def f():
+            linear = torch.nn.Linear(2, 3)
+            nparam = len(list(linear.parameters()))
+            print(f"nparam {nparam}")
+            assert nparam == 2
+
+        parity_test(self, f)
+
     def test_classifier(self):
         def f():
             torch.manual_seed(23)
