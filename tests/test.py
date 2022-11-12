@@ -62,6 +62,15 @@ class TestLight(unittest.TestCase):
             return t
         parity_test(self, g)
 
+    def test_tensor_div_scalar(self):
+        def f():
+            torch.manual_seed(23)
+            t = torch.randint(0, 10, (2, 3))
+            t = t / 10
+            print(t)
+            return t
+        parity_test(self, f)
+
     def test_rand(self):
         def f():
             torch.manual_seed(23)

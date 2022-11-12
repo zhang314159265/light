@@ -5,3 +5,4 @@
 
 # Scratch
 - end2end train the digit recognizer with light <++IMP
+  - support Tensor/int

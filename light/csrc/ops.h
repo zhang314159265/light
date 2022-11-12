@@ -324,4 +324,19 @@ static void uniform_(Tensor self, double lb, double ub) {
   });
 }
 
+static Tensor divScalar(Tensor self, int other) {
+  assert(!self.requires_grad()); // don't support grad yet
+  Tensor out(self.sizes(), ScalarType::Float);
+  DISPATCH_DTYPE(self.dtype(), [&]() {
+    self.visit([&self, &out, other](const std::vector<int>& indices) {
+      float other_f = other;
+      auto self_val = *(scalar_t*) self.locate(indices);
+      float self_val_f = (float) self_val;
+      *(float*) out.locate(indices) = self_val_f / other_f;
+      return true;
+    });
+  });
+  return out;
+}
+
 }

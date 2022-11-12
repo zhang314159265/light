@@ -72,6 +72,10 @@ Tensor Tensor::reduce(const std::vector<int>& reduced_size) const {
   return ops::reduce(*this, reduced_size);
 }
 
+Tensor Tensor::divScalar(int scalar) const {
+  return ops::divScalar(*this, scalar);
+}
+
 void Tensor::zero_() {
   ops::zero_(*this);
 }

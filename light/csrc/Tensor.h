@@ -285,6 +285,7 @@ class Tensor {
   Tensor transpose(int dim1, int dim2) const;
   // broadcast in fwd is reduce in bwd
   Tensor reduce(const std::vector<int>& reduced_size) const;
+  Tensor divScalar(int scalar) const;
 
   void zero_();
   void add_(Tensor other, double alpha);
