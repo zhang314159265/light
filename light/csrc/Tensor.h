@@ -295,6 +295,7 @@ class Tensor {
   // broadcast in fwd is reduce in bwd
   Tensor reduce(const std::vector<int>& reduced_size) const;
   Tensor divScalar(int scalar) const;
+  Tensor slice(py::slice slice_obj) const;
 
   void zero_();
   void add_(Tensor other, double alpha);

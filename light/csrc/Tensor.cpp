@@ -76,6 +76,10 @@ Tensor Tensor::divScalar(int scalar) const {
   return ops::divScalar(*this, scalar);
 }
 
+Tensor Tensor::slice(py::slice slice_obj) const {
+  return ops::slice(*this, slice_obj);
+}
+
 void Tensor::zero_() {
   ops::zero_(*this);
 }

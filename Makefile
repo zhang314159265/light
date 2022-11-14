@@ -4,7 +4,7 @@ CFLAGS=-Wno-pointer-arith
 pymodule:
 	rm -rf build/install
 	mkdir -p build/install
-	cp -r light build/install
+	cd build/install/ && ln -svf ../../light light
 	g++ light/csrc/*.cpp -shared -fPIC -I$(PYTHON_INC) -I. $(CFLAGS) -o build/install/light/_C.so
 
 test:
@@ -13,7 +13,7 @@ test:
 	# PYTHONPATH=build/install pytest -vs tests/test.py -k test_randint
 	# PYTHONPATH=build/install pytest -vs tests/test.py -k test_classifier
 	# PYTHONPATH=build/install pytest -vs tests/test.py -k test_linear
-	PYTHONPATH=build/install pytest -vs tests/test.py -k test_parameters
+	PYTHONPATH=build/install pytest -vs tests/test.py -k test_slice
 
 # digit recognizer
 dr:

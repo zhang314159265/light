@@ -34,6 +34,7 @@ PYBIND11_MODULE(_C, m) {
       assert(self.dim() > 0);
       return self.sizes()[0];
     })
+    .def("__getitem__", &Tensor::slice)
     .def("mean", &Tensor::mean)
     .def("transpose", &Tensor::transpose)
     .def("equal", &Tensor::equal)

@@ -227,3 +227,13 @@ class TestLight(unittest.TestCase):
             return lin.weight
 
         parity_test(self, f)
+
+    def test_slice(self):
+        def f():
+            torch.manual_seed(23)
+            x = torch.rand(10, 20)
+            y = x[3:12:2]
+            print(y)
+            return y
+
+        parity_test(self, f)

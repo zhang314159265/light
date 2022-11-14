@@ -339,4 +339,44 @@ static Tensor divScalar(Tensor self, int other) {
   return out;
 }
 
+static std::vector<int> calculate_indices_from_slice(int sz, py::slice slice_obj) {
+  size_t start, stop, step, slice_len;
+  bool status = slice_obj.compute(sz, &start, &stop, &step, &slice_len);
+  assert(status);
+  std::vector<int> indices(slice_len);
+  size_t cur = start;
+  for (int i = 0; i < slice_len; ++i) {
+    indices[i] = cur;
+    cur += step;
+  }
+  return indices;
+}
+
+static Tensor slice(Tensor self, py::slice slice_obj) {
+  assert(!self.requires_grad()); // TODO: don't support backward for slice so far
+  assert(self.dim() > 0);
+  std::vector<int> dim0_index_list = calculate_indices_from_slice(self.sizes()[0], slice_obj);
+  std::vector<int> out_sizes = self.sizes();
+  out_sizes[0] = dim0_index_list.size();
+  Tensor out(out_sizes, self.dtype());
+  
+  if (out.numel() > 0) {
+    DISPATCH_DTYPE(self.dtype(), [&]() {
+      for (int i = 0; i < dim0_index_list.size(); ++i) {
+        int dim0_index = dim0_index_list[i];
+        std::vector<int> in_indices = self.start_indices();
+        in_indices[0] = dim0_index;
+        std::vector<int> out_indices;
+        do {
+          auto in_val = *(scalar_t*) self.locate(in_indices);
+          out_indices = in_indices;
+          out_indices[0] = i;
+          *(scalar_t*) out.locate(out_indices) = in_val;
+        } while (self.next_indices(in_indices) && in_indices[0] == dim0_index);
+      }
+    });
+  }
+  return out;
+}
+
 }
