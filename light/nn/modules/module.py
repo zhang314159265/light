@@ -27,7 +27,7 @@ class Module:
         # TODO dedup?
         """
         yield self
-        for mod in self._modules:
+        for _, mod in self._modules.items():
             yield from mod.descendants()
 
     def parameters(self):

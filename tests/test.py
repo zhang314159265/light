@@ -237,3 +237,12 @@ class TestLight(unittest.TestCase):
             return y
 
         parity_test(self, f)
+
+    def test_max(self):
+        def f():
+            torch.manual_seed(23)
+            x = torch.rand(2, 3)
+            y = x.max(dim=0)[0]
+            print(y)
+            return y
+        parity_test(self, f)

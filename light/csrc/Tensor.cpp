@@ -56,6 +56,10 @@ Tensor Tensor::mean() const {
   return ops::mean(*this);
 }
 
+std::tuple<Tensor, Tensor> Tensor::max(int dim) const {
+  return ops::max(*this, dim);
+}
+
 Tensor Tensor::sum(int dim) const {
   return ops::sum(*this, dim);
 }

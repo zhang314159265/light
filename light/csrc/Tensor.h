@@ -191,8 +191,13 @@ class Tensor {
       // only set gradient for leaf node
       assert(!backward_node());
     }
-    assert(!impl_->grad_); // grad is not set yet
-    impl_->grad_ = new Tensor(grad);
+
+    // accumulate the grad
+    if (impl_->grad_) {
+      *impl_->grad_ = *impl_->grad_ + grad;
+    } else {
+      impl_->grad_ = new Tensor(grad);
+    }
   }
 
   const std::vector<int>& sizes() const {
@@ -288,6 +293,7 @@ class Tensor {
   friend Tensor operator-(const Tensor& lhs, const Tensor& rhs);
   friend Tensor operator*(const Tensor& lhs, const Tensor& rhs);
   Tensor mean() const;
+  std::tuple<Tensor, Tensor> max(int dim) const;
   Tensor exp() const;
   Tensor sum(int dim) const;
   Tensor unsqueeze(int dim) const;

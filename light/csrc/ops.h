@@ -80,6 +80,39 @@ static Tensor mean(const Tensor& inp) {
   return out;
 }
 
+static std::tuple<Tensor, Tensor> max(const Tensor& inp, int dim) {
+  assert(!inp.requires_grad());
+  std::vector<int> out_size = inp.sizes();
+  out_size.erase(out_size.begin() + dim);
+  Tensor out_values(out_size, inp.dtype());
+  Tensor out_pos_tensor(out_size, ScalarType::Int64);
+
+  assert(inp.sizes()[dim] > 0);
+
+  DISPATCH_DTYPE(inp.dtype(), [&]() {
+    out_values.visit([&out_values, &out_pos_tensor, &inp, dim](const std::vector<int> out_indices) {
+      int64_t& out_pos = *(int64_t*) out_pos_tensor.locate(out_indices);
+      scalar_t& out_val = *(scalar_t*) out_values.locate(out_indices);
+      int sz = inp.sizes()[dim];
+      out_pos = 0;
+      std::vector<int> in_indices = out_indices;
+      in_indices.insert(in_indices.begin() + dim, 0);
+      out_val = *(scalar_t*) inp.locate(in_indices);
+
+      for (int i = 1; i < sz; ++i) {
+        in_indices[dim] = i;
+        scalar_t newval = *(scalar_t*) inp.locate(in_indices);
+        if (newval > out_val) {
+          out_val = newval;
+          out_pos = i;
+        }
+      }
+      return true;
+    });
+  });
+  return std::make_tuple(out_values, out_pos_tensor);
+}
+
 static Tensor add(const Tensor& lhs, const Tensor& rhs) {
   std::vector<int> shape = get_broadcast_shape({lhs, rhs});
   Tensor out(shape, lhs.dtype());

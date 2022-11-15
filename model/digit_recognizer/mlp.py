@@ -52,7 +52,9 @@ def test_model(model, X, y, batch_size=100):
     tot_correct = 0
     for batch_X, batch_y in gen_batch(X, y, batch_size):
         pred = model(batch_X)
-        pred_cls = pred.max(dim=1).indices
+        # TODO support returning namedtuple
+        # pred_cls = pred.max(dim=1).indices
+        pred_cls = pred.max(dim=1)[1]
         tot += len(batch_X)
         tot_correct += (pred_cls == batch_y).sum()
 
@@ -60,6 +62,7 @@ def test_model(model, X, y, batch_size=100):
 
 def main():
     whole_df = pd.read_csv(path)
+    whole_df = whole_df.iloc[:10] # TODO TODO
     ntraining_examples = int(len(whole_df) * 0.7)
     train_df = whole_df.iloc[:ntraining_examples]
     test_df = whole_df.iloc[ntraining_examples:]

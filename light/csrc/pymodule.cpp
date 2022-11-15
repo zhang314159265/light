@@ -36,6 +36,7 @@ PYBIND11_MODULE(_C, m) {
     })
     .def("__getitem__", &Tensor::slice)
     .def("mean", &Tensor::mean)
+    .def("max", &Tensor::max, py::arg("dim"))
     .def("transpose", &Tensor::transpose)
     .def("equal", &Tensor::equal)
     .def("tolist", [](Tensor self) {
