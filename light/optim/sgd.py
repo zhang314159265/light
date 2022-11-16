@@ -2,7 +2,10 @@ import light
 
 class SGD:
     def __init__(self, params, lr):
-        self.params = params
+        # remember to convert potential generator to list.
+        # For a generator, only the first round of iteration will
+        # get something.
+        self.params = list(params)
         self.lr = lr
 
     def zero_grad(self):

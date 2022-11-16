@@ -30,6 +30,7 @@ def gen_batch(X, y, batch_size):
         off += batch_size
 
 def train(model, X, y, nepoch=5, lr=0.01, batch_size=100):
+    print(f"# param {len(list(model.parameters()))}")
     optim = torch.optim.SGD(model.parameters(), lr=lr)
     ce = torch.nn.CrossEntropyLoss()
     for epoch_id in range(nepoch):
@@ -58,6 +59,7 @@ def test_model(model, X, y, batch_size=100):
         tot += len(batch_X)
         tot_correct += (pred_cls == batch_y).sum()
 
+    # TODO why pytorch print tot_correct as scalar rather than 'Tensor(val)'?
     print(f"Accuracy: {tot_correct} / {tot} = {tot_correct / tot}")
 
 def main():
