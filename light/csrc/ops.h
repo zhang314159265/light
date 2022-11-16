@@ -183,6 +183,22 @@ static Tensor mul(const Tensor& lhs, const Tensor& rhs) {
   return out;
 }
 
+static Tensor eq(const Tensor& lhs, const Tensor& rhs) {
+  assert(!lhs.requires_grad() && !rhs.requires_grad()); // TODO: no backward support right now
+  Tensor out(lhs.sizes(), ScalarType::Bool);
+
+  DISPATCH_DTYPE(lhs.dtype(), [&]() {
+    out.visit([&lhs, &rhs, &out](const std::vector<int>& indices) {
+      scalar_t* lhs_ptr = (scalar_t*) lhs.locate(indices);
+      scalar_t* rhs_ptr = (scalar_t*) rhs.locate(indices);
+      bool* out_ptr = (bool*) out.locate(indices);
+      *out_ptr = (*lhs_ptr == *rhs_ptr);
+      return true;
+    });
+  });
+  return out;
+}
+
 static Tensor exp(const Tensor& in) {
   Tensor out(in.sizes(), in.dtype());
   out.visit([&in, &out](const std::vector<int>& indices) {

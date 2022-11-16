@@ -29,6 +29,10 @@ PYBIND11_MODULE(_C, m) {
     .def("__str__", &Tensor::to_string)
     .def("__repr__", &Tensor::to_string)
     .def("__add__", [](Tensor lhs, Tensor rhs) { return lhs + rhs; })
+    // TODO can we use C++ overloaded '==' here? Can cpp '==' returns a Tensor
+    // rather than bool
+    .def("__eq__", [](Tensor lhs, Tensor rhs) { return ops::eq(lhs, rhs); })
+    .def("__eq__", [](Tensor lhs, Tensor rhs) { return ops::eq(lhs, rhs); })
     .def("__truediv__", &Tensor::divScalar)
     .def("__len__", [](Tensor self) {
       assert(self.dim() > 0);

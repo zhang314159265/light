@@ -5,7 +5,7 @@
 
 # Scratch
 - end2end train the digit recognizer with light <++IMP
-  - max
+  - tensor equality
 
 - digit recognizer trains too slow in light, improve that.
 

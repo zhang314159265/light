@@ -18,6 +18,7 @@ enum ScalarType {
   Float = 0,
   Double = 1,
   Int64 = 2,
+  Bool = 3,
 };
 
 template <typename T>
@@ -46,6 +47,13 @@ template <> ScalarType scalarTypeFromCTypeToEnum<int64_t>() { return Int64; }
     worker(); \
     break; \
   } \
+  case ScalarType::Bool: { \
+    using scalar_t = bool; \
+    worker(); \
+    break; \
+  } \
+  default: \
+    assert(false && "unrecognized dtype"); \
   } \
 } while(false)
 
@@ -57,6 +65,8 @@ static inline int scalar_type_nbytes(ScalarType dtype) {
     return 8;
   case ScalarType::Int64:
     return 8;
+  case ScalarType::Bool:
+    return 1;
   default:
     assert(false && "element_size unhandled branch");
   }

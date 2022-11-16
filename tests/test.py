@@ -246,3 +246,13 @@ class TestLight(unittest.TestCase):
             print(y)
             return y
         parity_test(self, f)
+
+    def test_eq(self):
+        def f():
+            torch.manual_seed(23)
+            x = torch.randint(0, 3, (10,))
+            y = torch.randint(0, 3, (10,))
+            z = (x == y)
+            print(z)
+            return z
+        parity_test(self, f)
