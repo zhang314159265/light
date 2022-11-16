@@ -250,6 +250,31 @@ static Tensor log_softmax(const Tensor& inp, int dim) {
   return out;
 }
 
+static Tensor sum(Tensor in) {
+  assert(!in.requires_grad());
+
+  // the sum of bool tensor should be int64 tensor
+  ScalarType out_dtype = in.dtype();
+  if (out_dtype == ScalarType::Bool) {
+    out_dtype = ScalarType::Int64;
+  }
+  Tensor out({}, out_dtype);
+
+  // NOTE: To sum a bool tensor, alternatively we could also convert the bool tensor to int64
+  // tensor first. Thus the input/output tensor has the same dtype.
+  DISPATCH_DTYPE(in.dtype(), [&]() {
+    DISPATCH_DTYPE_WITH_NAME(out.dtype(), [&]() {
+      out_scalar_t* out_ptr = (out_scalar_t*) out.data(); 
+      *out_ptr = 0;
+      in.visit([&in, out_ptr](const std::vector<int>& indices) {
+        *out_ptr += *(scalar_t*) in.locate(indices);
+        return true;
+      });
+    }, out_scalar_t);
+  });
+  return out;
+}
+
 static Tensor sum(Tensor in, int dim) {
   if (dim < 0) {
     dim += in.dim();

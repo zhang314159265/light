@@ -30,7 +30,7 @@ template <> ScalarType scalarTypeFromCTypeToEnum<float>() { return Float; }
 template <> ScalarType scalarTypeFromCTypeToEnum<double>() { return Double; }
 template <> ScalarType scalarTypeFromCTypeToEnum<int64_t>() { return Int64; }
 
-#define DISPATCH_DTYPE(dtype, worker) do { \
+#define DISPATCH_DTYPE_WITH_NAME(dtype, worker, scalar_t) do { \
   switch (dtype) {\
   case ScalarType::Float: { \
     using scalar_t = float; \
@@ -56,6 +56,8 @@ template <> ScalarType scalarTypeFromCTypeToEnum<int64_t>() { return Int64; }
     assert(false && "unrecognized dtype"); \
   } \
 } while(false)
+
+#define DISPATCH_DTYPE(dtype, worker) DISPATCH_DTYPE_WITH_NAME(dtype, worker, scalar_t)
 
 static inline int scalar_type_nbytes(ScalarType dtype) {
   switch (dtype) {
@@ -152,9 +154,8 @@ class Tensor {
   template <typename T>
   T item() const {
     assert(dim() == 0);
-    assert(dtype() == ScalarType::Float);
-    using scalar_t = float; // TODO
-    return *((scalar_t *) data());
+    assert(scalarTypeFromCTypeToEnum<T>() == dtype());
+    return *((T *) data());
   }
 
   bool requires_grad() const {
@@ -305,6 +306,8 @@ class Tensor {
   Tensor mean() const;
   std::tuple<Tensor, Tensor> max(int dim) const;
   Tensor exp() const;
+  // returns a scalar tensor for the sum
+  Tensor sum() const;
   Tensor sum(int dim) const;
   Tensor unsqueeze(int dim) const;
   Tensor transpose(int dim1, int dim2) const;

@@ -41,6 +41,12 @@ PYBIND11_MODULE(_C, m) {
     .def("__getitem__", &Tensor::slice)
     .def("mean", &Tensor::mean)
     .def("max", &Tensor::max, py::arg("dim"))
+    .def("sum", [](Tensor self) {
+      return self.sum();
+    })
+    .def("sum", [](Tensor self, int dim) {
+      return self.sum(dim);
+    })
     .def("transpose", &Tensor::transpose)
     .def("equal", &Tensor::equal)
     .def("tolist", [](Tensor self) {
@@ -48,8 +54,11 @@ PYBIND11_MODULE(_C, m) {
       return self.tolist(indices);
     })
     .def("item", [](Tensor self) {
-      assert(self.dtype() == ScalarType::Float); // TODO
-      return self.item<float>();
+      py::object ret;
+      DISPATCH_DTYPE(self.dtype(), [&]() {
+        ret = py::cast(self.item<scalar_t>());
+      });
+      return ret;
     })
     .def_property("requires_grad", &Tensor::requires_grad, &Tensor::set_requires_grad)
     .def_property("is_param", &Tensor::is_param, &Tensor::set_is_param)

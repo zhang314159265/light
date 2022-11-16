@@ -64,6 +64,10 @@ Tensor Tensor::sum(int dim) const {
   return ops::sum(*this, dim);
 }
 
+Tensor Tensor::sum() const {
+  return ops::sum(*this);
+}
+
 Tensor Tensor::unsqueeze(int dim) const {
   return ops::unsqueeze(*this, dim);
 }
