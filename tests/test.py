@@ -268,3 +268,14 @@ class TestLight(unittest.TestCase):
             print(z)
             return z
         parity_test(self, f) 
+
+    def test_tensor_radd(self):
+        def f():
+            torch.manual_seed(23)
+            v = 5
+            t = torch.randint(0, 3, (5,)).sum()
+            print(t)
+            v += t
+            print(v)
+            return v
+        parity_test(self, f)

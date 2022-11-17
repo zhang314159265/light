@@ -59,6 +59,21 @@ template <> ScalarType scalarTypeFromCTypeToEnum<int64_t>() { return Int64; }
 
 #define DISPATCH_DTYPE(dtype, worker) DISPATCH_DTYPE_WITH_NAME(dtype, worker, scalar_t)
 
+static const char* scalar_type_str(ScalarType dtype) {
+  switch (dtype) {
+  case ScalarType::Float:
+    return "float";
+  case ScalarType::Double:
+    return "double";
+  case ScalarType::Int64:
+    return "int64_t";
+  case ScalarType::Bool:
+    return "bool";
+  default:
+    assert(false && "scalar_type_str unhandled branch");
+  }
+}
+
 static inline int scalar_type_nbytes(ScalarType dtype) {
   switch (dtype) {
   case ScalarType::Float:
@@ -128,9 +143,9 @@ class Tensor {
     : impl_(new TensorImpl(sizes, dtype)) {
   }
 
-  // TODO support type other than float
-  static Tensor create_scalar_tensor(float val) {
-    Tensor out({}, ScalarType::Float);
+  template <typename T> 
+  static Tensor create_scalar_tensor(T val) {
+    Tensor out({}, scalarTypeFromCTypeToEnum<T>());
     out.set_item(val);
     return out;
   }
@@ -144,11 +159,11 @@ class Tensor {
 
   static Tensor dummy; // a dummy tensor. The value does not matter
 
-  // TODO support type other than float
-  void set_item(float val) {
-    assert(dtype() == ScalarType::Float);
+  template <typename T>
+  void set_item(T val) {
+    assert(dtype() == scalarTypeFromCTypeToEnum<T>());
     assert(dim() == 0);
-    *((float *) data()) = val;
+    *((T *) data()) = val;
   }
 
   template <typename T>
@@ -286,7 +301,7 @@ class Tensor {
 
   std::string to_string() const {
     std::stringstream ss;
-    ss << "Print tensor" << std::endl;
+    ss << "Print " << scalar_type_str(dtype()) << " tensor" << std::endl;
     DISPATCH_DTYPE(dtype(), [&]() {
       visit([this, &ss](const std::vector<int>& indices) {
         ss << *(scalar_t *) locate(indices) << std::endl;

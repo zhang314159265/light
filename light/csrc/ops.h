@@ -116,13 +116,14 @@ static std::tuple<Tensor, Tensor> max(const Tensor& inp, int dim) {
 static Tensor add(const Tensor& lhs, const Tensor& rhs) {
   std::vector<int> shape = get_broadcast_shape({lhs, rhs});
   Tensor out(shape, lhs.dtype());
-  out.visit([&lhs, &rhs, &out](const std::vector<int>& indices) {
-    using scalar_t = float; // TODO 
-    auto lhs_ptr = (scalar_t*) lhs.locate(indices);
-    auto rhs_ptr = (scalar_t*) rhs.locate(indices);
-    auto out_ptr = (scalar_t*) out.locate(indices);
-    *out_ptr = *lhs_ptr + *rhs_ptr;
-    return true;
+  DISPATCH_DTYPE(lhs.dtype(), [&]() {
+    out.visit([&lhs, &rhs, &out](const std::vector<int>& indices) {
+      auto lhs_ptr = (scalar_t*) lhs.locate(indices);
+      auto rhs_ptr = (scalar_t*) rhs.locate(indices);
+      auto out_ptr = (scalar_t*) out.locate(indices);
+      *out_ptr = *lhs_ptr + *rhs_ptr;
+      return true;
+    });
   });
   create_backward_node<AddBackward>(out, {lhs, rhs});
   return out;
