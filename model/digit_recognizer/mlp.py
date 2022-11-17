@@ -1,6 +1,7 @@
 from light.utils import import_torch_light
 import os
 import pandas as pd
+import numpy as np
 
 import_torch_light()
 
@@ -63,16 +64,17 @@ def test_model(model, X, y, batch_size=100):
     print(f"Accuracy: {tot_correct} / {tot} = {tot_correct / tot}")
 
 def main():
+    torch.manual_seed(23)
     whole_df = pd.read_csv(path)
     whole_df = whole_df.iloc[:10] # TODO TODO
     ntraining_examples = int(len(whole_df) * 0.7)
     train_df = whole_df.iloc[:ntraining_examples]
     test_df = whole_df.iloc[ntraining_examples:]
 
-    train_X = torch.LongTensor(train_df.loc[:, train_df.columns!="label"].to_numpy()) / 255
+    train_X = torch.LongTensor(np.ascontiguousarray(train_df.loc[:, train_df.columns!="label"].to_numpy())) / 255
     train_y = torch.LongTensor(train_df.loc[:, "label"].to_numpy())
 
-    test_X = torch.LongTensor(test_df.loc[:, test_df.columns!="label"].to_numpy()) / 255
+    test_X = torch.LongTensor(np.ascontiguousarray(test_df.loc[:, test_df.columns!="label"].to_numpy())) / 255
     test_y = torch.LongTensor(test_df.loc[:, "label"].to_numpy())
 
     model = Classifier()

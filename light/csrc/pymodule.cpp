@@ -17,6 +17,7 @@ PYBIND11_MODULE(_C, m) {
     .def(py::init([](int size0, int size1) {
       return std::make_unique<Tensor>(std::vector<int>({size0, size1}), ScalarType::Float);
     }))
+    // TODO: support non contiguous numpy array
     .def(py::init([](py::array_t<float> ar) {
       return createFromNpArray(ar);
     }))
