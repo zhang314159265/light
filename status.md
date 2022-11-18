@@ -5,8 +5,21 @@
 
 # Scratch
 - end2end train the digit recognizer with light <++IMP
+  - numerical correctness is guaranteed (88% accuracy)
+  - but training too slow ( 254m v.s. 14s) <== 1000x slower
+    ```
+real    254m19.037s
+user    254m18.274s
+sys     0m3.600s
 
-- digit recognizer trains too slow in light, improve that.
+v.s.
+
+real    0m13.886s
+user    5m2.333s
+sys     0m4.603s
+    ```
+  - TODO: create micro benchmarks
+
 
 - improve the build system (do this after the digit recognizer works e2e)
   - make changing python file super easy [DONE]

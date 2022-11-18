@@ -66,7 +66,7 @@ def test_model(model, X, y, batch_size=100):
 def main():
     torch.manual_seed(23)
     whole_df = pd.read_csv(path)
-    whole_df = whole_df.iloc[:10] # TODO TODO
+    # whole_df = whole_df.iloc[:1000] # TODO
     ntraining_examples = int(len(whole_df) * 0.7)
     train_df = whole_df.iloc[:ntraining_examples]
     test_df = whole_df.iloc[ntraining_examples:]
