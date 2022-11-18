@@ -299,9 +299,22 @@ class Tensor {
     });
   }
 
+  std::string size_str() const {
+    std::stringstream ss;
+    ss << "[";
+    for (int i = 0; i < dim(); ++i) {
+      if (i != 0) {
+        ss << ", ";  
+      }
+      ss << sizes()[i];
+    }
+    ss << "]";
+    return ss.str();
+  }
+
   std::string to_string() const {
     std::stringstream ss;
-    ss << "Print " << scalar_type_str(dtype()) << " tensor" << std::endl;
+    ss << "Print " << scalar_type_str(dtype()) << size_str() << " tensor" << std::endl;
     DISPATCH_DTYPE(dtype(), [&]() {
       visit([this, &ss](const std::vector<int>& indices) {
         ss << *(scalar_t *) locate(indices) << std::endl;

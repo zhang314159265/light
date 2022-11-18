@@ -454,4 +454,64 @@ static Tensor slice(Tensor self, py::slice slice_obj) {
   return out;
 }
 
+static Tensor conv2d(Tensor in, Tensor weight, Tensor bias, std::vector<int> stride, std::vector<int> padding) {
+  assert(stride.size() == 2);
+  assert(padding.size() == 2);
+  assert(in.dim() == 4);
+  assert(weight.dim() == 4);
+  assert(bias.dim() == 1);
+  assert(bias.sizes()[0] == weight.sizes()[0]);
+  assert(in.sizes()[1] == weight.sizes()[1]);
+
+  int batch_size = in.sizes()[0];
+  int out_channel = weight.sizes()[0];
+  int in_channel = weight.sizes()[1];
+  std::vector<int> out_sizes = in.sizes();
+
+  out_sizes[1] = out_channel;
+
+  for (int i = 0; i < 2; ++i) {
+    int l = in.sizes()[i + 2] + 2 * padding[i] - weight.sizes()[i + 2];
+    int maxidx = l / stride[i];  // floor div
+    out_sizes[i + 2] = maxidx + 1;
+  }
+  Tensor out(out_sizes, in.dtype());
+
+  DISPATCH_DTYPE(in.dtype(), [&]() {
+    for (int n = 0; n < batch_size; ++n) {
+      for (int outc = 0; outc < out_channel; ++outc) {
+        for (int outh_idx = 0; outh_idx < out.sizes()[2]; ++outh_idx) {
+          for (int outw_idx = 0; outw_idx < out.sizes()[3]; ++outw_idx) {
+            scalar_t& out_val = *(scalar_t*) out.locate({n, outc, outh_idx, outw_idx});
+            scalar_t& bias_val = *(scalar_t*) bias.locate({outc});
+            out_val = bias_val;
+            
+            for (int inc = 0; inc < in_channel; ++inc) {
+              for (int kerh_idx = 0; kerh_idx < weight.sizes()[2]; ++kerh_idx) {
+                for (int kerw_idx = 0; kerw_idx < weight.sizes()[3]; ++kerw_idx) {
+                  // obtain weight
+                  scalar_t& weight_val = *(scalar_t*) weight.locate({outc, inc, kerh_idx, kerw_idx});
+                  // obtain in_val
+                  int inh_idx = outh_idx * stride[0] + kerh_idx - padding[0];
+                  int inw_idx = outw_idx * stride[1] + kerw_idx - padding[1];
+                  scalar_t in_val = 0;
+                  if (inh_idx >= 0 && inh_idx < in.sizes()[2] && inw_idx >= 0 && inw_idx < in.sizes()[3]) {
+                    in_val = *(scalar_t*) in.locate({
+                      n, inc, inh_idx, inw_idx
+                    });
+                  }
+                  out_val += weight_val * in_val;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+
+  create_backward_node<Conv2dBackward>(out, {in, weight, bias}); // TODO need pass other configs as well
+  return out;
+}
+
 }

@@ -13,7 +13,7 @@ test:
 	# PYTHONPATH=build/install pytest -vs tests/test.py -k test_randint
 	# PYTHONPATH=build/install pytest -vs tests/test.py -k test_classifier
 	# PYTHONPATH=build/install pytest -vs tests/test.py -k test_linear
-	PYTHONPATH=build/install pytest -vs tests/test.py -k test_tensor_radd
+	PYTHONPATH=build/install pytest -vs tests/test.py -k test_conv2d
 
 # digit recognizer
 dr:

@@ -279,3 +279,42 @@ class TestLight(unittest.TestCase):
             print(v)
             return v
         parity_test(self, f)
+
+    def test_conv2d(self):
+        def f():
+            torch.manual_seed(23)
+            N = 2
+            Cin = 2
+            Cout = 2
+            K = 3
+            padding = 0
+            H = 4
+            W = 4
+            stride = 1
+
+            t_in = torch.rand(N, Cin, H, W)
+            t_weight = torch.rand(Cout, Cin, K, K)
+            t_bias = torch.rand(Cout)
+            out = torch.conv2d(t_in, t_weight, t_bias, stride=(stride, stride), padding=(padding, padding))
+            print(out)
+            return out
+        parity_test(self, f)
+
+        def g():
+            torch.manual_seed(23)
+            N = 2
+            Cin = 3
+            Cout = 5
+            K = 3
+            padding = 2
+            H = 10
+            W = 10
+            stride = 2
+
+            t_in = torch.rand(N, Cin, H, W)
+            t_weight = torch.rand(Cout, Cin, K, K)
+            t_bias = torch.rand(Cout)
+            out = torch.conv2d(t_in, t_weight, t_bias, stride=(stride, stride), padding=(padding, padding))
+            print(out)
+            return out
+        parity_test(self, g)

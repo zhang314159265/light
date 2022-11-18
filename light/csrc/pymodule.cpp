@@ -104,6 +104,14 @@ PYBIND11_MODULE(_C, m) {
     }
     return out;
   }, py::arg("size0"), py::arg("size1"), py::arg("requires_grad") = false);
+  m.def("rand", [](int size0, int size1, int size2, int size3, bool requires_grad) {
+    auto out = createRandTensor({size0, size1, size2, size3}, ScalarType::Float);
+    if (requires_grad) {
+      out.set_requires_grad(true);
+    }
+    return out;
+  }, py::arg("size0"), py::arg("size1"), py::arg("size2"), py::arg("size3"), py::arg("requires_grad") = false);
+
 
   m.def("randint", [](int low, int high, std::vector<int> sizes) {
     return createRandIntTensor(low, high, sizes);
@@ -116,4 +124,5 @@ PYBIND11_MODULE(_C, m) {
   m.def("nll_loss", &ops::nll_loss);
   m.def("disable_grad", &disable_grad);
   m.def("enable_grad", &enable_grad);
+  m.def("conv2d", &ops::conv2d, py::arg("input"), py::arg("weight"), py::arg("bias"), py::arg("stride"), py::arg("padding"));
 }

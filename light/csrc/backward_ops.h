@@ -231,3 +231,12 @@ class SigmoidBackward : public BackwardNode {
     propagate({inp_grad});
   }
 };
+
+class Conv2dBackward : public BackwardNode {
+ public:
+  using BackwardNode::BackwardNode;
+
+  void run(Tensor out, Tensor out_grad) {
+    assert(false && "Conv2dBackward::run ni"); // TODO
+  }
+};
