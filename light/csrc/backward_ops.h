@@ -249,3 +249,12 @@ class MaxPool2dBackward : public BackwardNode {
     assert(false && "MaxPool2dBackward::run ni"); // TODO
   }
 };
+
+class DropoutBackward : public BackwardNode {
+ public:
+  using BackwardNode::BackwardNode;
+
+  void run(Tensor out, Tensor out_grad) {
+    assert(false && "DropoutBackward::run ni"); // TODO
+  }
+};

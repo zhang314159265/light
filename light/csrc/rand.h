@@ -14,9 +14,27 @@ class Generator {
     return val01 * (end - start) + start;
   }
 
+  // TODO avoid code duplication with uniform
+  double uniform64(double start, double end) {
+    uint64_t val = random64();
+    constexpr int ndig = std::numeric_limits<double>::digits;
+    constexpr uint64_t mask = (1ULL << ndig) - 1;
+    constexpr double div = 1.0 / (1ULL << ndig);
+    double val01 = (val & mask) * div;
+    return val01 * (end - start) + start;
+  }
+
   int32_t uniformInt(int low, int high) {
     int range = high - low;
-    return get_engine()() % range + low;
+    return random() % range + low;
+  }
+
+  uint64_t random64() {
+    return (((uint64_t) random() << 32) | random());
+  }
+
+  uint32_t random() {
+    return get_engine()();
   }
 
   static void set_seed(int seed) {

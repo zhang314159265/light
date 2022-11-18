@@ -4,7 +4,11 @@
 - automatically add the `create_backward_node` calls to ops
 
 # Scratch
-- TODO: conv backward <==
+- TODO: dropout forward/backward <==
+- TODO: adaptive avg pool 2d forward/backward
+- TODO: torch.flatten
+- TODO: conv backward
+- TODO: `max_pool2d` backward
 - TODO: support alexnet in light
 
 - end2end train the digit recognizer with light <++IMP

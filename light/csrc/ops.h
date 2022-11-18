@@ -558,4 +558,32 @@ static Tensor max_pool2d(Tensor in, std::vector<int> kernel_size, std::vector<in
   return out;
 }
 
+static Tensor dropout(Tensor in, bool train, double p) {
+  if (!train) {
+    return in;
+  }
+  assert(p > 0 && p < 1);
+  Tensor out(in.sizes(), in.dtype());
+  Generator gen;
+  DISPATCH_DTYPE(in.dtype(), [&]() {
+    double factor = 1.0 / (1 - p);
+    out.visit([&](const std::vector<int>& indices) {
+      scalar_t& out_val = *(scalar_t*) out.locate(indices);
+      scalar_t& in_val = *(scalar_t*) in.locate(indices);
+      // PyTorch compare the prob with (1-p) rather than p using a double
+      // precision. We could compare with p and use single precision. But
+      // to maintain numeric parity with PyTorch we compare with 1-p and
+      // use double precision.
+      if (gen.uniform64(0, 1) >= (1 - p)) {
+        out_val = 0;
+      } else {
+        out_val = in_val * factor;
+      }
+      return true;
+    });
+  });
+  create_backward_node<DropoutBackward>(out, {in});
+  return out;
+}
+
 }

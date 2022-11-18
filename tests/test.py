@@ -317,3 +317,14 @@ class TestLight(unittest.TestCase):
             print(x)
             return x
         parity_test(self, f)
+
+    def test_dropout(self):
+        def f(train=True):
+            torch.manual_seed(23)
+
+            x = torch.rand(4, 6)
+            x = torch.dropout(x, train=train, p=0.3)
+            return x
+
+        parity_test(self, functools.partial(f, train=False))
+        parity_test(self, f)
