@@ -240,3 +240,12 @@ class Conv2dBackward : public BackwardNode {
     assert(false && "Conv2dBackward::run ni"); // TODO
   }
 };
+
+class MaxPool2dBackward : public BackwardNode {
+ public:
+  using BackwardNode::BackwardNode;
+
+  void run(Tensor out, Tensor out_grad) {
+    assert(false && "MaxPool2dBackward::run ni"); // TODO
+  }
+};

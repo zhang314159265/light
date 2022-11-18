@@ -454,6 +454,10 @@ static Tensor slice(Tensor self, py::slice slice_obj) {
   return out;
 }
 
+static int calc_conv_out_size(int in_size, int padding, int kernel_size, int stride) {
+  return (in_size + padding * 2 - kernel_size) / stride + 1;
+}
+
 static Tensor conv2d(Tensor in, Tensor weight, Tensor bias, std::vector<int> stride, std::vector<int> padding) {
   assert(stride.size() == 2);
   assert(padding.size() == 2);
@@ -471,9 +475,7 @@ static Tensor conv2d(Tensor in, Tensor weight, Tensor bias, std::vector<int> str
   out_sizes[1] = out_channel;
 
   for (int i = 0; i < 2; ++i) {
-    int l = in.sizes()[i + 2] + 2 * padding[i] - weight.sizes()[i + 2];
-    int maxidx = l / stride[i];  // floor div
-    out_sizes[i + 2] = maxidx + 1;
+    out_sizes[i + 2] = calc_conv_out_size(in.sizes()[i + 2], padding[i], weight.sizes()[i + 2], stride[i]);
   }
   Tensor out(out_sizes, in.dtype());
 
@@ -511,6 +513,48 @@ static Tensor conv2d(Tensor in, Tensor weight, Tensor bias, std::vector<int> str
   });
 
   create_backward_node<Conv2dBackward>(out, {in, weight, bias}); // TODO need pass other configs as well
+  return out;
+}
+
+static Tensor max_pool2d(Tensor in, std::vector<int> kernel_size, std::vector<int> padding, std::vector<int> stride) {
+  assert(kernel_size.size() == 2);
+  assert(padding.size() == 2);
+  assert(stride.size() == 2);
+  assert(in.dim() == 4);
+  int N = in.sizes()[0];
+  int C = in.sizes()[1];
+  std::vector<int> out_sizes = in.sizes();
+  for (int i = 0; i < 2; ++i) {
+    out_sizes[i + 2] = calc_conv_out_size(
+      in.sizes()[i + 2], padding[i], kernel_size[i], stride[i]
+    );
+  }
+  Tensor out(out_sizes, in.dtype());
+  DISPATCH_DTYPE(in.dtype(), [&]() {
+    for (int n = 0; n < N; ++n) {
+      for (int c = 0; c < C; ++c) {
+        for (int outh_idx = 0; outh_idx < out.sizes()[2]; ++outh_idx) {
+          for (int outw_idx = 0; outw_idx < out.sizes()[3]; ++outw_idx) {
+            scalar_t& out_val = *(scalar_t*) out.locate({n, c, outh_idx, outw_idx});
+            out_val = std::numeric_limits<scalar_t>::min();
+
+            for (int kerh_idx = 0; kerh_idx < kernel_size[0]; ++kerh_idx) {
+              for (int kerw_idx = 0; kerw_idx < kernel_size[1]; ++kerw_idx) {
+                // obtain in_val
+                int inh_idx = outh_idx * stride[0] + kerh_idx - padding[0];
+                int inw_idx = outw_idx * stride[1] + kerw_idx - padding[1];
+                if (inh_idx >= 0 && inh_idx < in.sizes()[2] && inw_idx >= 0 && inw_idx < in.sizes()[3]) {
+                  out_val = std::max(out_val, *(scalar_t*) in.locate({n, c, inh_idx, inw_idx}));
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+
+  create_backward_node<MaxPool2dBackward>(out, {in}); 
   return out;
 }
 

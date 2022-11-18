@@ -4,9 +4,12 @@
 - automatically add the `create_backward_node` calls to ops
 
 # Scratch
+- TODO: conv backward <==
+- TODO: support alexnet in light
+
 - end2end train the digit recognizer with light <++IMP
   - numerical correctness is guaranteed (88% accuracy)
-  - but training too slow ( 254m v.s. 14s) <== 1000x slower
+  - but training too slow ( 254m v.s. 14s) <== 1000x slower (-O2?)
     ```
 real    254m19.037s
 user    254m18.274s
@@ -19,6 +22,7 @@ user    5m2.333s
 sys     0m4.603s
     ```
   - TODO: create micro benchmarks
+  - goal: at least 0.5 as fast
 
 
 - improve the build system (do this after the digit recognizer works e2e)

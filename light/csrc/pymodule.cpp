@@ -125,4 +125,5 @@ PYBIND11_MODULE(_C, m) {
   m.def("disable_grad", &disable_grad);
   m.def("enable_grad", &enable_grad);
   m.def("conv2d", &ops::conv2d, py::arg("input"), py::arg("weight"), py::arg("bias"), py::arg("stride"), py::arg("padding"));
+  m.def("max_pool2d", &ops::max_pool2d, py::arg("input"), py::arg("kernel_size"), py::arg("padding"), py::arg("stride"));
 }

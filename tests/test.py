@@ -4,6 +4,7 @@ import unittest
 from light.bridge import to_torch_tensor
 from light.utils import import_torch_light
 import numpy as np
+import functools
 
 import_torch_light()
 
@@ -281,17 +282,8 @@ class TestLight(unittest.TestCase):
         parity_test(self, f)
 
     def test_conv2d(self):
-        def f():
+        def f(N=2, Cin=3, Cout=5, K=3, padding=2, H=10, W=10, stride=2):
             torch.manual_seed(23)
-            N = 2
-            Cin = 2
-            Cout = 2
-            K = 3
-            padding = 0
-            H = 4
-            W = 4
-            stride = 1
-
             t_in = torch.rand(N, Cin, H, W)
             t_weight = torch.rand(Cout, Cin, K, K)
             t_bias = torch.rand(Cout)
@@ -300,21 +292,28 @@ class TestLight(unittest.TestCase):
             return out
         parity_test(self, f)
 
-        def g():
-            torch.manual_seed(23)
-            N = 2
-            Cin = 3
-            Cout = 5
-            K = 3
-            padding = 2
-            H = 10
-            W = 10
-            stride = 2
+        parity_test(self, functools.partial(f,
+            N = 2,
+            Cin = 2,
+            Cout = 2,
+            K = 3,
+            padding = 0,
+            H = 4,
+            W = 4,
+            stride = 1,
+        ))
 
-            t_in = torch.rand(N, Cin, H, W)
-            t_weight = torch.rand(Cout, Cin, K, K)
-            t_bias = torch.rand(Cout)
-            out = torch.conv2d(t_in, t_weight, t_bias, stride=(stride, stride), padding=(padding, padding))
-            print(out)
-            return out
-        parity_test(self, g)
+    def test_max_pool2d(self):
+        def f(N=2, C=3, H=10, W=10, K=6, P=3, S=2):
+            torch.manual_seed(23)
+
+            x = torch.rand(N, C, H, W)
+            K = (K, K)
+            P = (P, P)
+            S = (S, S)
+            # it's find even if in pybind the argment order is:
+            # kernel_size, padding, stride.
+            x = torch.max_pool2d(x, padding=P, kernel_size=K, stride=S)
+            print(x)
+            return x
+        parity_test(self, f)
