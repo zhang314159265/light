@@ -21,16 +21,26 @@ def parity_test(testCase, worker):
 
     if torch_tensor is None and light_tensor is None:
         return
-    testCase.assertTrue(list(torch_tensor.size()) == light_tensor.size())
 
-    import torch as real_torch
-    torch_tensor_from_light = to_torch_tensor(light_tensor)
-    # When torch_tensor is a long tensor, it can not be compared with
-    # torch_tensor_from_light with is a float tensor. Convert torch_tensor
-    # to float tensor to ease the comparison.
-    torch_tensor = torch_tensor.to(dtype=real_torch.float32) 
-    testCase.assertTrue(real_torch.allclose(torch_tensor, torch_tensor_from_light), f"Torch tensor:\n{torch_tensor}\nlight tensor:\n{torch_tensor_from_light}")
-
+    def numeric_check(lhs, rhs):
+        if isinstance(lhs, (list, tuple)) and isinstance(rhs, (list, tuple)):
+            testCase.assertTrue(len(lhs) == len(rhs))
+            for litem, ritem in zip(lhs, rhs):
+                numeric_check(litem, ritem)
+        else:
+            torch_tensor = lhs
+            light_tensor = rhs
+            testCase.assertTrue(list(torch_tensor.size()) == light_tensor.size())
+    
+            import torch as real_torch
+            torch_tensor_from_light = to_torch_tensor(light_tensor)
+            # When torch_tensor is a long tensor, it can not be compared with
+            # torch_tensor_from_light with is a float tensor. Convert torch_tensor
+            # to float tensor to ease the comparison.
+            torch_tensor = torch_tensor.to(dtype=real_torch.float32) 
+            testCase.assertTrue(real_torch.allclose(torch_tensor, torch_tensor_from_light), f"Torch tensor:\n{torch_tensor}\nlight tensor:\n{torch_tensor_from_light}")
+   
+    numeric_check(torch_tensor, light_tensor)
     import_torch_light()
 
 class TestLight(unittest.TestCase):
@@ -285,12 +295,9 @@ class TestLight(unittest.TestCase):
 
     def test_conv2d(self):
         def f(N=2, Cin=3, Cout=5, K=3, padding=2, H=10, W=10, stride=2):
-            torch.manual_seed(23)
             t_in = torch.rand(N, Cin, H, W)
-            t_weight = torch.rand(Cout, Cin, K, K)
-            t_bias = torch.rand(Cout)
-            out = torch.conv2d(t_in, t_weight, t_bias, stride=(stride, stride), padding=(padding, padding))
-            print(out)
+            conv = torch.nn.Conv2d(Cin, Cout, kernel_size=K, padding=padding, stride=stride)
+            out = conv(t_in)
             return out
         parity_test(self, f)
 
