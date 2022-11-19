@@ -338,3 +338,13 @@ class TestLight(unittest.TestCase):
             return x
 
         parity_test(self, f)
+
+    def test_reshape(self):
+        def f():
+            torch.manual_seed(23)
+            x = torch.rand(10)
+            x = torch.reshape(x, [2, 5])
+            print(x)
+            return x
+
+        parity_test(self, f)

@@ -4,10 +4,10 @@
 - automatically add the `create_backward_node` calls to ops
 
 # Scratch
-- TODO: adaptive avg pool 2d forward/backward
 
 - TODO: torch.flatten
 
+- TODO: adaptive avg pool 2d backward
 - TODO: conv backward
 - TODO: `max_pool2d` backward
 - TODO: dropout backward

@@ -267,3 +267,12 @@ class AdaptiveAvgPool2dBackward : public BackwardNode {
     assert(false && "AdaptiveAvgPool2dBackward::run ni"); // TODO
   }
 };
+
+class ReshapeBackward : public BackwardNode {
+ public:
+  using BackwardNode::BackwardNode;
+
+  void run(Tensor out, Tensor out_grad) {
+    assert(false && "ReshapeBackward::run ni"); // TODO
+  }
+};

@@ -634,4 +634,20 @@ static Tensor adaptive_avg_pool2d(Tensor in, std::vector<int> outhw) {
   return out;
 }
 
+static Tensor reshape(Tensor in, std::vector<int> out_shape) {
+  Tensor out(out_shape, in.dtype());
+  assert(out.numel() == in.numel());
+
+  DISPATCH_DTYPE(in.dtype(), [&]() {
+    scalar_t* out_ptr = (scalar_t*) out.data();
+    in.visit([&](const std::vector<int>& in_indices) {
+      scalar_t in_val = *(scalar_t*) in.locate(in_indices);
+      *out_ptr++ = in_val;
+      return true;
+    });
+  });
+  create_backward_node<ReshapeBackward>(out, {in});
+  return out;
+}
+
 }
