@@ -15,3 +15,58 @@ void MatmulBackward::run(Tensor out, Tensor out_grad) {
   }
   propagate({lhs_grad, rhs_grad});
 }
+
+void MaxPool2dBackward::run(Tensor out, Tensor out_grad) {
+  Tensor in = inputs_[0];
+  assert(in.requires_grad());
+
+  Tensor in_grad(in.sizes(), in.dtype());
+  in_grad.zero_();
+  int N = in.sizes()[0];
+  int C = in.sizes()[1];
+
+  DISPATCH_DTYPE(in_grad.dtype(), [&]() {
+    for (int n = 0; n < N; ++n) {
+      for (int c = 0; c < C; ++c) {
+        for (int outh_idx = 0; outh_idx < out.sizes()[2]; ++outh_idx) {
+          for (int outw_idx = 0; outw_idx < out.sizes()[3]; ++outw_idx) {
+            scalar_t& out_grad_val = *(scalar_t*) out_grad.locate({n, c, outh_idx, outw_idx});
+
+            scalar_t max_val = std::numeric_limits<scalar_t>::min();
+            #if 0
+            // TODO: why this cause build failure?
+            int best_inh_idx = -1, best_inw_idx = -1;
+            #else
+            int best_inh_idx = -1;
+            int best_inw_idx = -1;
+            #endif
+            scalar_t in_val;
+
+            for (int kerh_idx = 0; kerh_idx < kernel_size_[0]; ++kerh_idx) {
+              for (int kerw_idx = 0; kerw_idx < kernel_size_[1]; ++kerw_idx) {
+                // obtain in_val
+                int inh_idx = outh_idx * stride_[0] + kerh_idx - padding_[0];
+                int inw_idx = outw_idx * stride_[1] + kerw_idx - padding_[1];
+                if (inh_idx >= 0 && inh_idx < in.sizes()[2] && inw_idx >= 0 && inw_idx < in.sizes()[3]) {
+                  in_val = *(scalar_t*) in.locate({n, c, inh_idx, inw_idx});
+                  if (best_inh_idx < 0 || in_val > max_val) {
+                    max_val = in_val;
+                    best_inh_idx = inh_idx;
+                    best_inw_idx = inw_idx;
+                  }
+                }
+              }
+            }
+
+            if (best_inh_idx >= 0) {
+              scalar_t& in_grad_val = *(scalar_t*) in_grad.locate({n, c, best_inh_idx, best_inw_idx});
+              in_grad_val += out_grad_val;
+            }
+          }
+        }
+      }
+    }
+  });
+
+  propagate({in_grad});
+}

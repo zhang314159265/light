@@ -4,16 +4,17 @@
 - automatically add the `create_backward_node` calls to ops
 
 # Scratch
-- TODO: create the Conv2d class
-
-- TODO: conv backward
-
-- TODO: torch.flatten backward
-- TODO: adaptive avg pool 2d backward
 - TODO: `max_pool2d` backward
-- TODO: dropout backward
-- TODO: support alexnet in light
 
+- TODO: conv backward <==
+  - 1. think about how to implement conv backward morally
+  - 2. check how pytorch implement conv backward.
+
+- TODO: adaptive avg pool 2d backward
+- TODO: dropout backward
+
+- TODO: support alexnet in light
+- TODO: torch.flatten backward
 - end2end train the digit recognizer with light <++IMP
   - numerical correctness is guaranteed (88% accuracy)
   - but training too slow ( 254m v.s. 14s) <== 1000x slower (-O2?)

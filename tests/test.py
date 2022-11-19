@@ -298,7 +298,8 @@ class TestLight(unittest.TestCase):
             t_in = torch.rand(N, Cin, H, W)
             conv = torch.nn.Conv2d(Cin, Cout, kernel_size=K, padding=padding, stride=stride)
             out = conv(t_in)
-            return out
+            out.mean().backward()
+            return conv.weight.grad, conv.bias.grad
         parity_test(self, f)
 
         parity_test(self, functools.partial(f,
@@ -316,15 +317,18 @@ class TestLight(unittest.TestCase):
         def f(N=2, C=3, H=10, W=10, K=6, P=3, S=2):
             torch.manual_seed(23)
 
-            x = torch.rand(N, C, H, W)
+            inp = torch.rand(N, C, H, W)
+            inp.requires_grad = True
             K = (K, K)
             P = (P, P)
             S = (S, S)
             # it's find even if in pybind the argment order is:
             # kernel_size, padding, stride.
-            x = torch.max_pool2d(x, padding=P, kernel_size=K, stride=S)
-            print(x)
-            return x
+            x = torch.max_pool2d(inp, padding=P, kernel_size=K, stride=S)
+            x.mean().backward()
+
+            print(inp.grad)
+            return inp
         parity_test(self, f)
 
     def test_dropout(self):

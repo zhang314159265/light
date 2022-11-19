@@ -243,11 +243,15 @@ class Conv2dBackward : public BackwardNode {
 
 class MaxPool2dBackward : public BackwardNode {
  public:
-  using BackwardNode::BackwardNode;
+  explicit MaxPool2dBackward(const std::vector<Tensor>& inputs, std::vector<int> kernel_size, std::vector<int> padding, std::vector<int> stride)
+    : BackwardNode(inputs), kernel_size_(kernel_size),
+      padding_(padding), stride_(stride) { }
 
-  void run(Tensor out, Tensor out_grad) {
-    assert(false && "MaxPool2dBackward::run ni"); // TODO
-  }
+  void run(Tensor out, Tensor out_grad);
+ private:
+  std::vector<int> kernel_size_;
+  std::vector<int> padding_;
+  std::vector<int> stride_;
 };
 
 class DropoutBackward : public BackwardNode {

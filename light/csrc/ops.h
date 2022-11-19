@@ -555,7 +555,9 @@ static Tensor max_pool2d(Tensor in, std::vector<int> kernel_size, std::vector<in
     }
   });
 
-  create_backward_node<MaxPool2dBackward>(out, {in}); 
+  create_backward_node(out, {in}, [&]() {
+    return new MaxPool2dBackward({in}, kernel_size, padding, stride);
+  }); 
   return out;
 }
 
