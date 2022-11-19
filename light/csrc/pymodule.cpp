@@ -22,7 +22,9 @@ PYBIND11_MODULE(_C, m) {
       return createFromNpArray(ar);
     }))
     .def("size", &Tensor::sizes)
+    .def_property("shape", &Tensor::sizes, nullptr)
     .def("stride", &Tensor::strides)
+    .def("dim", &Tensor::dim)
     .def("dtype", [](Tensor self) {
       return (int) self.dtype();
     })

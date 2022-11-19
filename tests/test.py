@@ -13,8 +13,10 @@ def parity_test(testCase, worker):
     Worker returns a torch or light Tensor
     """
     import_torch_light(True)
+    torch.manual_seed(23)
     torch_tensor = worker()
     import_torch_light(False)
+    torch.manual_seed(23)
     light_tensor = worker()
 
     if torch_tensor is None and light_tensor is None:
@@ -347,4 +349,12 @@ class TestLight(unittest.TestCase):
             print(x)
             return x
 
+        parity_test(self, f)
+
+    def test_flatten(self):
+        def f():
+            x = torch.rand(2, 3, 2, 2)
+            x = torch.flatten(x, 1)
+            print(x)
+            return x
         parity_test(self, f)
