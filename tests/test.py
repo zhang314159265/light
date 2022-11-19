@@ -328,3 +328,13 @@ class TestLight(unittest.TestCase):
 
         parity_test(self, functools.partial(f, train=False))
         parity_test(self, f)
+
+    def test_adaptive_avg_pool2d(self):
+        def f():
+            torch.manual_seed(23)
+            x = torch.rand(2, 3, 10, 10);
+            x = torch.nn.functional.adaptive_avg_pool2d(x, (3, 7))
+            print(x)
+            return x
+
+        parity_test(self, f)

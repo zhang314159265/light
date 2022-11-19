@@ -4,6 +4,7 @@
 #include "light/csrc/backward.h"
 #include "light/csrc/backward_ops.h"
 #include "light/csrc/rand.h"
+#include "light/csrc/adaptive_pool_helper.h"
 
 namespace ops {
 
@@ -583,6 +584,53 @@ static Tensor dropout(Tensor in, bool train, double p) {
     });
   });
   create_backward_node<DropoutBackward>(out, {in});
+  return out;
+}
+
+static Tensor adaptive_avg_pool2d(Tensor in, std::vector<int> outhw) {
+  assert(outhw.size() == 2);
+  assert(in.dim() == 4);
+
+  int N = in.sizes()[0];
+  int C = in.sizes()[1];
+  int inh = in.sizes()[2];
+  int inw = in.sizes()[3];
+
+  int outh = outhw[0];
+  int outw = outhw[1];
+  assert(inh >= outh);
+  assert(inw >= outw);
+  Tensor out({N, C, outh, outw}, in.dtype());
+
+  // TODO should we use double to do accumulation?
+  DISPATCH_DTYPE(in.dtype(), [&]() {
+    for (int n = 0; n < N; ++n) {
+      for (int c = 0; c < C; ++c) {
+        for (int outh_idx = 0; outh_idx < outh; ++outh_idx) {
+          for (int outw_idx = 0; outw_idx < outw; ++outw_idx) {
+            scalar_t& out_val = *(scalar_t*) out.locate({n, c, outh_idx, outw_idx});
+            int inh_start = calc_start_idx(outh_idx, outh, inh);
+            int inh_end = calc_end_idx(outh_idx, outh, inh);
+            int inw_start = calc_start_idx(outw_idx, outw, inw);
+            int inw_end = calc_end_idx(outw_idx, outw, inw);
+
+            int cnt = (inh_end - inh_start) * (inw_end - inw_start);
+            assert(cnt > 0);
+            scalar_t sum = 0;
+            for (int inh_idx = inh_start; inh_idx < inh_end; ++inh_idx) {
+              for (int inw_idx = inw_start; inw_idx < inw_end; ++inw_idx) {
+                scalar_t& in_val = *(scalar_t*) in.locate({n, c, inh_idx, inw_idx});
+                sum += in_val;
+              }
+            }
+            out_val = sum / cnt;
+          }
+        }
+      }
+    }
+  });
+
+  create_backward_node<AdaptiveAvgPool2dBackward>(out, {in});
   return out;
 }
 

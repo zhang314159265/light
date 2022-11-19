@@ -13,7 +13,7 @@ test:
 	# PYTHONPATH=build/install pytest -vs tests/test.py -k test_randint
 	# PYTHONPATH=build/install pytest -vs tests/test.py -k test_classifier
 	# PYTHONPATH=build/install pytest -vs tests/test.py -k test_linear
-	PYTHONPATH=build/install pytest -vs tests/test.py -k test_dropout
+	PYTHONPATH=build/install pytest -vs tests/test.py -k test_adaptive_avg_pool2d
 
 # digit recognizer
 dr:

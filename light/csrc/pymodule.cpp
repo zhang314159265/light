@@ -127,4 +127,5 @@ PYBIND11_MODULE(_C, m) {
   m.def("conv2d", &ops::conv2d, py::arg("input"), py::arg("weight"), py::arg("bias"), py::arg("stride"), py::arg("padding"));
   m.def("max_pool2d", &ops::max_pool2d, py::arg("input"), py::arg("kernel_size"), py::arg("padding"), py::arg("stride"));
   m.def("dropout", &ops::dropout, py::arg("input"), py::arg("train"), py::arg("p"));
+  m.def("adaptive_avg_pool2d", &ops::adaptive_avg_pool2d);
 }
