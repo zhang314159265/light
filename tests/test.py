@@ -296,10 +296,11 @@ class TestLight(unittest.TestCase):
     def test_conv2d(self):
         def f(N=2, Cin=3, Cout=5, K=3, padding=2, H=10, W=10, stride=2):
             t_in = torch.rand(N, Cin, H, W)
+            t_in.requires_grad = True
             conv = torch.nn.Conv2d(Cin, Cout, kernel_size=K, padding=padding, stride=stride)
             out = conv(t_in)
             out.mean().backward()
-            return conv.weight.grad, conv.bias.grad
+            return conv.weight.grad, conv.bias.grad, t_in.grad
         parity_test(self, f)
 
         parity_test(self, functools.partial(f,

@@ -5,17 +5,15 @@
 
 # Scratch
 
-- TODO: adaptive avg pool 2d backward
-
-
 - TODO: conv backward <==
   - 1. think about how to implement conv backward morally
   - 2. check how pytorch implement conv backward.
 
 - TODO: dropout backward
+- TODO: torch.flatten backward
 
 - TODO: support alexnet in light
-- TODO: torch.flatten backward
+
 - end2end train the digit recognizer with light <++IMP
   - numerical correctness is guaranteed (88% accuracy)
   - but training too slow ( 254m v.s. 14s) <== 1000x slower (-O2?)

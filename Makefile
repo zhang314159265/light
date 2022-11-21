@@ -14,7 +14,7 @@ test:
 	# PYTHONPATH=build/install pytest -vs tests/test.py -k test_classifier
 	# PYTHONPATH=build/install pytest -vs tests/test.py -k test_linear
 	# PYTHONPATH=build/install pytest -vs tests/test.py -k test_max_pool2d
-	PYTHONPATH=build/install pytest -vs tests/test.py -k test_adaptive_avg_pool2d
+	PYTHONPATH=build/install pytest -vs tests/test.py -k test_conv2d
 
 # digit recognizer
 dr:

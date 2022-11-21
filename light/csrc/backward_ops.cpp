@@ -113,3 +113,66 @@ void AdaptiveAvgPool2dBackward::run(Tensor out, Tensor out_grad) {
   });
   propagate({in_grad});
 }
+
+void Conv2dBackward::run(Tensor out, Tensor out_grad) {
+  Tensor in = inputs_[0];
+  Tensor weight = inputs_[1];
+  Tensor bias = inputs_[2];
+
+  assert(weight.requires_grad());
+  assert(bias.requires_grad());
+
+  Tensor in_grad = Tensor::dummy;
+  if (in.requires_grad()) {
+    in_grad = Tensor(in.sizes(), in.dtype());
+    in_grad.zero_();
+  }
+  Tensor weight_grad = Tensor(weight.sizes(), weight.dtype());
+  weight_grad.zero_();
+  Tensor bias_grad = Tensor(bias.sizes(), bias.dtype());
+  bias_grad.zero_();
+
+  int batch_size = in.sizes()[0];
+  int in_channel = in.sizes()[1];
+
+  int out_channel = out.sizes()[1];
+
+  DISPATCH_DTYPE(weight_grad.dtype(), [&]() {
+    for (int n = 0; n < batch_size; ++n) {
+      for (int outc = 0; outc < out_channel; ++outc) {
+        for (int outh_idx = 0; outh_idx < out.sizes()[2]; ++outh_idx) {
+          for (int outw_idx = 0; outw_idx < out.sizes()[3]; ++outw_idx) {
+            scalar_t& out_grad_val = *(scalar_t*) out_grad.locate({n, outc, outh_idx, outw_idx});
+            scalar_t& bias_grad_val = *(scalar_t*) bias_grad.locate({outc});
+            bias_grad_val += out_grad_val;
+            
+            for (int inc = 0; inc < in_channel; ++inc) {
+              for (int kerh_idx = 0; kerh_idx < weight.sizes()[2]; ++kerh_idx) {
+                for (int kerw_idx = 0; kerw_idx < weight.sizes()[3]; ++kerw_idx) {
+                  // obtain in_val
+                  int inh_idx = outh_idx * stride_[0] + kerh_idx - padding_[0];
+                  int inw_idx = outw_idx * stride_[1] + kerw_idx - padding_[1];
+
+                  if (inh_idx >= 0 && inh_idx < in.sizes()[2] && inw_idx >= 0 && inw_idx < in.sizes()[3]) {
+                    scalar_t in_val = *(scalar_t*) in.locate({
+                      n, inc, inh_idx, inw_idx
+                    });
+                    scalar_t& weight_val = *(scalar_t*) weight.locate({outc, inc, kerh_idx, kerw_idx});
+                    scalar_t& weight_grad_val = *(scalar_t*) weight_grad.locate({outc, inc, kerh_idx, kerw_idx});
+                    weight_grad_val += out_grad_val * in_val;
+                    if (in.requires_grad()) {
+                      scalar_t& in_grad_val = *(scalar_t*) in_grad.locate({n, inc, inh_idx, inw_idx});
+                      in_grad_val += out_grad_val * weight_val;
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+
+  propagate({in_grad, weight_grad, bias_grad});
+}

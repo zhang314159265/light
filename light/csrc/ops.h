@@ -513,7 +513,9 @@ static Tensor conv2d(Tensor in, Tensor weight, Tensor bias, std::vector<int> str
     }
   });
 
-  create_backward_node<Conv2dBackward>(out, {in, weight, bias}); // TODO need pass other configs as well
+  create_backward_node(out, {in, weight, bias}, [&]() {
+    return new Conv2dBackward({in, weight, bias}, stride, padding);
+  });
   return out;
 }
 

@@ -234,11 +234,15 @@ class SigmoidBackward : public BackwardNode {
 
 class Conv2dBackward : public BackwardNode {
  public:
-  using BackwardNode::BackwardNode;
+  explicit Conv2dBackward(const std::vector<Tensor>& inputs, std::vector<int> stride, std::vector<int> padding)
+    : BackwardNode(inputs),
+      stride_(stride),
+      padding_(padding) { }
 
-  void run(Tensor out, Tensor out_grad) {
-    assert(false && "Conv2dBackward::run ni"); // TODO
-  }
+  void run(Tensor out, Tensor out_grad);
+ private:
+  std::vector<int> stride_;
+  std::vector<int> padding_;
 };
 
 class MaxPool2dBackward : public BackwardNode {
