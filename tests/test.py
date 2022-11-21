@@ -328,7 +328,7 @@ class TestLight(unittest.TestCase):
             x.mean().backward()
 
             print(inp.grad)
-            return inp
+            return inp.grad
         parity_test(self, f)
 
     def test_dropout(self):
@@ -345,10 +345,12 @@ class TestLight(unittest.TestCase):
     def test_adaptive_avg_pool2d(self):
         def f():
             torch.manual_seed(23)
-            x = torch.rand(2, 3, 10, 10);
-            x = torch.nn.functional.adaptive_avg_pool2d(x, (3, 7))
-            print(x)
-            return x
+            inp = torch.rand(2, 3, 10, 10);
+            inp.requires_grad = True
+            x = torch.nn.functional.adaptive_avg_pool2d(inp, (3, 7))
+            x.mean().backward()
+            print(inp.grad)
+            return inp.grad
 
         parity_test(self, f)
 

@@ -70,3 +70,46 @@ void MaxPool2dBackward::run(Tensor out, Tensor out_grad) {
 
   propagate({in_grad});
 }
+
+void AdaptiveAvgPool2dBackward::run(Tensor out, Tensor out_grad) {
+  Tensor in = inputs_[0];
+  assert(in.requires_grad());
+
+  Tensor in_grad(in.sizes(), in.dtype());
+  in_grad.zero_();
+
+  int N = out.sizes()[0];
+  int C = out.sizes()[1];
+  int outh = out.sizes()[2];
+  int outw = out.sizes()[3];
+
+  int inh = in.sizes()[2];
+  int inw = in.sizes()[3];
+
+  DISPATCH_DTYPE(in_grad.dtype(), [&]() {
+    for (int n = 0; n < N; ++n) {
+      for (int c = 0; c < C; ++c) {
+        for (int outh_idx = 0; outh_idx < outh; ++outh_idx) {
+          for (int outw_idx = 0; outw_idx < outw; ++outw_idx) {
+            scalar_t& out_grad_val = *(scalar_t*) out_grad.locate({n, c, outh_idx, outw_idx});
+            int inh_start = calc_start_idx(outh_idx, outh, inh);
+            int inh_end = calc_end_idx(outh_idx, outh, inh);
+            int inw_start = calc_start_idx(outw_idx, outw, inw);
+            int inw_end = calc_end_idx(outw_idx, outw, inw);
+
+            int cnt = (inh_end - inh_start) * (inw_end - inw_start);
+            assert(cnt > 0);
+            scalar_t factor = 1.0 / cnt;
+            for (int inh_idx = inh_start; inh_idx < inh_end; ++inh_idx) {
+              for (int inw_idx = inw_start; inw_idx < inw_end; ++inw_idx) {
+                scalar_t& in_grad_val = *(scalar_t*) in_grad.locate({n, c, inh_idx, inw_idx});
+                in_grad_val += out_grad_val * factor;
+              }
+            }
+          }
+        }
+      }
+    }
+  });
+  propagate({in_grad});
+}

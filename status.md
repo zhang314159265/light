@@ -4,13 +4,14 @@
 - automatically add the `create_backward_node` calls to ops
 
 # Scratch
-- TODO: `max_pool2d` backward
+
+- TODO: adaptive avg pool 2d backward
+
 
 - TODO: conv backward <==
   - 1. think about how to implement conv backward morally
   - 2. check how pytorch implement conv backward.
 
-- TODO: adaptive avg pool 2d backward
 - TODO: dropout backward
 
 - TODO: support alexnet in light
