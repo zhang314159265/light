@@ -5,14 +5,15 @@
 
 # Scratch
 
-- TODO: conv backward <==
-  - 1. think about how to implement conv backward morally
-  - 2. check how pytorch implement conv backward.
+- TODO: implement resnet in pytorch myself and make sure numerical parity with torchvision
 
 - TODO: dropout backward
 - TODO: torch.flatten backward
 
 - TODO: support alexnet in light
+
+- TODO: conv backward <==
+  - 2. check how pytorch implement conv backward and compare with my own implementation.
 
 - end2end train the digit recognizer with light <++IMP
   - numerical correctness is guaranteed (88% accuracy)
