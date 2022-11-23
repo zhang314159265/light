@@ -131,4 +131,5 @@ PYBIND11_MODULE(_C, m) {
   m.def("dropout", &ops::dropout, py::arg("input"), py::arg("train"), py::arg("p"));
   m.def("adaptive_avg_pool2d", &ops::adaptive_avg_pool2d);
   m.def("reshape", &ops::reshape);
+  m.def("batch_norm", &ops::batch_norm);
 }

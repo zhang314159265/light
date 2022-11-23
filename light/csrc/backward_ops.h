@@ -282,3 +282,12 @@ class ReshapeBackward : public BackwardNode {
     assert(false && "ReshapeBackward::run ni"); // TODO
   }
 };
+
+class BatchNormBackward : public BackwardNode {
+ public:
+  using BackwardNode::BackwardNode;
+
+  void run(Tensor out, Tensor out_grad) {
+    assert(false && "BatchNormBackward::run ni"); // TODO
+  }
+};

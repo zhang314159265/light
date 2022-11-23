@@ -654,4 +654,71 @@ static Tensor reshape(Tensor in, std::vector<int> out_shape) {
   return out;
 }
 
+static Tensor batch_norm(Tensor in, Tensor running_mean, Tensor running_var, Tensor weight, Tensor bias, bool training, double momentum, double eps) {
+  Tensor out(in.sizes(), in.dtype());
+
+  int BS = in.sizes()[0];
+  int C = in.sizes()[1];
+  int H = in.sizes()[2];
+  int W = in.sizes()[3];
+  int N = in.numel() / C;
+
+  DISPATCH_DTYPE(in.dtype(), [&]() {
+    for (int c = 0; c < C; ++c) {
+      #if 0
+      // why this can not compile?
+      scalar_t mean, var;
+      #else
+      scalar_t mean;
+      scalar_t var;
+      #endif
+
+      // calculate mean & var
+      if (training) {
+        mean = 0;
+        scalar_t var_sum = 0.0;
+
+        for (int batch_idx = 0; batch_idx < BS; ++batch_idx) {
+        for (int h_idx = 0; h_idx < H; ++h_idx) {
+        for (int w_idx = 0; w_idx < W; ++w_idx) {
+          mean += *(scalar_t*) in.locate({batch_idx, c, h_idx, w_idx});
+        } } }
+        mean /= N;
+        for (int batch_idx = 0; batch_idx < BS; ++batch_idx) {
+        for (int h_idx = 0; h_idx < H; ++h_idx) {
+        for (int w_idx = 0; w_idx < W; ++w_idx) {
+          scalar_t in_val = *(scalar_t*) in.locate({batch_idx, c, h_idx, w_idx});
+          var_sum += (in_val - mean) * (in_val - mean);
+        } } }
+
+        // update the running mean/var
+        scalar_t& running_mean_val = *(scalar_t*) running_mean.locate({c});
+        scalar_t& running_var_val = *(scalar_t*) running_var.locate({c});
+        running_mean_val = running_mean_val * (1 - momentum) + mean * momentum;
+        running_var_val = running_var_val * (1 - momentum) + var_sum / (N - 1) * momentum;
+
+        var = var_sum / N;
+      } else {
+        mean = *(scalar_t*) running_mean.locate({c});
+        var = *(scalar_t*) running_var.locate({c});
+      }
+
+      // calculate out Tensor
+      scalar_t weight_val = *(scalar_t*) weight.locate({c});
+      scalar_t bias_val = *(scalar_t*) bias.locate({c});
+      for (int batch_idx = 0; batch_idx < BS; ++batch_idx) {
+      for (int h_idx = 0; h_idx < H; ++h_idx) {
+      for (int w_idx = 0; w_idx < W; ++w_idx) {
+        scalar_t& in_val = *(scalar_t*) in.locate({batch_idx, c, h_idx, w_idx});
+        scalar_t& out_val = *(scalar_t*) out.locate({batch_idx, c, h_idx, w_idx});
+
+        out_val = (in_val - mean) / sqrt(var + eps) * weight_val + bias_val;
+      } } }
+    }
+  });
+
+  create_backward_node<BatchNormBackward>(out, {in});
+  return out;
+}
+
 }

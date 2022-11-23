@@ -372,3 +372,38 @@ class TestLight(unittest.TestCase):
             print(x)
             return x
         parity_test(self, f)
+
+    def test_batchnorm(self):
+        def f():
+            C = 3
+            x = torch.rand(1, C, 2, 2)
+            running_mean = torch.rand(C)
+            running_var = torch.rand(C)
+            weight = torch.rand(C)
+            bias = torch.rand(C)
+            momentum = 0.1
+            eps = 1e-5
+            out = torch.nn.functional.batch_norm(
+                x,
+                running_mean,
+                running_var,
+                weight,
+                bias,
+                True, # training
+                momentum,
+                eps
+            )
+            out2 = torch.nn.functional.batch_norm(
+                x,
+                running_mean,
+                running_var,
+                weight,
+                bias,
+                False, # training
+                momentum,
+                eps
+            )
+            print(out)
+            return out, out2, running_mean, running_var
+
+        parity_test(self, f)

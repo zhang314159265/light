@@ -4,8 +4,13 @@
 - automatically add the `create_backward_node` calls to ops
 
 # Scratch
+- TODO: support batchnorm
+  - understand how PyTorch implement batchnorm
+    - check `native_batch_norm`
 
-- TODO: implement resnet in pytorch myself and make sure numerical parity with torchvision
+- TODO: use transformer to do machine translation.. (pytorch, not light yet)
+
+- TODO: support resnet18 in light
 
 - TODO: dropout backward
 - TODO: torch.flatten backward
